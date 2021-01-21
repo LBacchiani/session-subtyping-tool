@@ -56,7 +56,7 @@ class Controller:
     def save_type_img(self, name, t, customname):
         out = "Done"
         if not os.path.isfile(name + ".dot"): out = self.show_single_type(name, t, False)
-        if out.__contains__("Done"): self.save_simulation_img(name, customname)
+        if out.__contains__("Done"): self.save_simulation_img(name, customname if not customname == "" else "new_type")
 
     def gen_img(self, name): self.fv.generate(name)
 
