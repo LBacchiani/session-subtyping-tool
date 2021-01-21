@@ -10,7 +10,7 @@ class WorkingArea(Observer):
         ###Utilities###
         self.lastty = ""
         self.laststy = ""
-        self.filename = location + ".txt"
+        self.filename = ""
         self.width = width
         self.height = height
         self.rpoint = 0
@@ -39,7 +39,6 @@ class WorkingArea(Observer):
 
 
     def create_frame(self, s, menu):
-
         self.window.pack(side=s)
         self.custommenu = menu
         self.custommenu.bind_type(self.t)

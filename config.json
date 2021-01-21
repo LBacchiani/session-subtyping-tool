@@ -6,9 +6,9 @@
     "standard_exec": "",
     "visual_flag": "--pics",
     "simulation_file": "tmp/simulation_tree",
-    "win": "asynchronous-subtyping\\win\\",
+    "Windows": "asynchronous-subtyping\\win\\",
     "osx": "asynchronous-subtyping/osx/",
-    "exec_comm": "Checker -i [flags] [t1] [t2] [steps]"
+    "exec_comm": "Checker [flags] [t1] [t2] [steps]"
   },
 
   {
@@ -20,7 +20,7 @@
     "simulation_file": "tmp/simulation_tree",
     "win": "fair-asynchronous-subtyping\\win\\",
     "osx": "fair-asynchronous-subtyping/osx/",
-    "exec_comm": "Checker -i [flags] [t1] [t2] [steps]"
+    "exec_comm": "Checker [flags] [t1] [t2] [steps]"
   },
 
   {
@@ -32,6 +32,6 @@
     "simulation_file": "tmp/simulation_tree",
     "osx": "sync_subtyping/osx/",
     "win": "sync_subtyping\\win\\",
-    "exec_comm": "Checker -i [flags] [t1] [t2]"
+    "exec_comm": "Checker [flags] [t1] [t2]"
   }
 ]
