@@ -6,7 +6,7 @@
     "standard_exec": "",
     "visual_flag": "--pics",
     "simulation_file": "tmp/simulation_tree",
-    "Windows": "asynchronous-subtyping\\win\\",
+    "win": "asynchronous-subtyping\\win\\",
     "osx": "asynchronous-subtyping/osx/",
     "exec_comm": "Checker [flags] [t1] [t2] [steps]"
   },
