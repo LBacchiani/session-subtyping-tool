@@ -1,11 +1,20 @@
+
+tmp/
+.idea/
+asynchronous-subtyping/.DS_Store
+fair-asynchronous-subtyping/.DS_Store
+sync_subtyping/.DS_Store
+viewer/.DS_Store
+.DS_Store
+####PYTHON STANDARD#####
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-tmp/
+
 # C extensions
 *.so
-.idea
 # Distribution / packaging
 .Python
 build/
