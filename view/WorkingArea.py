@@ -59,8 +59,8 @@ class WorkingArea(Observer):
         ###Buttons###
         self.show.place(x=int(self.width * .07), y=int(self.height * .9))
         self.save.place(x=int(self.width * .35), y=int(self.height * .9))
-        self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/") + "type_cfsm", self.t.get("1.0", "end-1c")))
-        self.save.configure(command=lambda: self.controller.save_type_img(("tmp\\" if platform.system() == "Windows" else "tmp/") + "type_cfsm", self.t.get("1.0", "end-1c"), self.filename[:-4]))
+        self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
+        self.save.configure(command=lambda: self.controller.save_type_img(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
 
         ###Scroll bar###
         self.scroll.config(command=self.t.yview)
@@ -76,7 +76,7 @@ class WorkingArea(Observer):
         self.custommenu.on_dual_events(self.filename[:-4], self.location)
 
     def __on_io_events(self, text, filename):
-        self.ty.configure(text=self.ty['text'].split(" ")[0] + " "+ filename)
+        self.ty.configure(text=self.ty['text'].split(" ")[0] + " " + filename)
         self.t.delete('1.0', tk.END)
         self.t.insert('1.0', text)
         self.lastty = text

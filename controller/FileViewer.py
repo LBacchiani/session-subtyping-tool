@@ -8,11 +8,11 @@ class FileViewer:
         self.format = ""
         self.config = config
 
-    def generate(self, path):
-        command = "dot -T" + self.format + " " + path + ".dot > " + path + "." + self.format
+    def generate(self, path, dotname, imgname):
+        command = "dot -T" + self.format + " " + path + dotname + ".dot > " + path + imgname + "." + self.format
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    def show(self, path):
-        if platform.system() == "Windows": command = path + "." + self.format
-        elif platform.system() == "Darwin": command = "open " + path + "." + self.format
+    def show(self,  path, name):
+        command = path + name + "." + self.format
+        if platform.system() == "Darwin": command = "open " + command
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

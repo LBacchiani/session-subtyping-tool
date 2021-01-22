@@ -35,46 +35,41 @@ class Controller:
             IOEvent(location, f.read(), name)
         except: pass
 
-    def save_type(self, location, text):
+    def save_type(self, location, currentname, text):
         try:
-            f = fd.asksaveasfile(mode='w', defaultextension=".txt", initialfile=location if not location == "" else "new_type")
+            f = fd.asksaveasfile(mode='w', defaultextension=".txt", initialfile=currentname if not currentname == "" else "new_type")
             name = f.name.split("/")[-1]
             f.write(text)
             f.close()
             IOEvent(location, text, name)
         except: pass
 
-    def save_simulation_img(self, name, customname):
-        if not os.path.isfile(name + "." + self.fv.format): self.gen_img(name)
-        try:
-            f = fd.asksaveasfile(mode='w', initialfile=customname.replace(" ", "_") + "." + self.fv.format)
-            if platform.system() == "Windows": command = "copy " + name + "." + self.fv.format + " " + f.name.replace("/", "\\") + " && del " + name + "." + self.fv.format
-            else: command = "mv " + name + "." + self.fv.format + " " + f.name
-            subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        except: pass
+    def save_simulation_img(self, path, dotname, imgname):
+        if not os.path.isfile(dotname + "." + self.fv.format): self.fv.generate(path, dotname, imgname.replace(" ", "_"))
+        self.__save_img(path, imgname.replace(" ", "_"))
 
-    def save_type_img(self, name, t, customname):
+    def gen_img(self, path, dotname, imgname): self.fv.generate(path, dotname, imgname)
+
+    def show_img(self, path, imgname): self.fv.show(path, imgname)
+
+    def save_type_img(self, path, dotname, imgname, t):
         out = "Done"
-        if not os.path.isfile(name + ".dot"): out = self.show_single_type(name, t, False)
-        if out.__contains__("Done"): self.save_simulation_img(name, customname if not customname == "" else "new_type")
+        if not os.path.isfile(dotname + ".dot"): out = self.show_single_type(path, dotname, imgname, t, False)
+        if out.__contains__("Done"): self.__save_img(path, imgname)
 
-    def gen_img(self, name): self.fv.generate(name)
-
-    def show_img(self, name): self.fv.show(name)
-
-    def show_single_type(self, typename, t, show=True):
-        t_name = self.__crete_tmp_type( "tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
+    def show_single_type(self, path, dotname, imgname, t, show=True):
+        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
         if platform.system() == "Windows":
             command = 'viewer\\win\\viewer ' + t_name + " && del " + t_name #ide
             #command = 'viewer\\viewer ' + t_name    #standalone
         else:
             command = "viewer/osx/viewer " + t_name + " && rm " + t_name  #ide
             #command = 'viewer/viewer ' + t_name     #standalone
-        out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT).stdout)
+        out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         if out.__contains__("Done"):
-            self.gen_img(typename)
-            if show: self.show_img(typename)
-        else: showinfo("Syntax Error", message=self.string_cleaner(out))
+            self.gen_img(path, dotname, imgname)
+            if show: self.show_img(path, imgname)
+        else: showinfo("Syntax Error", message=self.__string_cleaner(out))
         return out
 
     ########################################################################
@@ -87,7 +82,7 @@ class Controller:
         if platform.system() == "Windows": command = algconfig['win'] + command + " && del " + t_name + " && del " + s_name
         else: command = algconfig['osx'] + command + " && rm " + t_name + " && rm " + s_name
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
-        return self.string_cleaner(out)
+        return self.__string_cleaner(out)
 
     def __alg_target(self, algconfig, t, s, options, pics, steps):
         out = self.__execute_command(algconfig, t, s, options, pics, steps).replace("b'", "").replace("'", "").replace('b"','').replace('"','').replace("\\n","\n")
@@ -99,6 +94,8 @@ class Controller:
         for c in ty:
             if c == '!': dual += '?'
             elif c == '?': dual += '!'
+            elif c == '+': dual += '&'
+            elif c == '&': dual += '+'
             else: dual += c
         return dual
 
@@ -109,4 +106,12 @@ class Controller:
         f.close()
         return f.name
 
-    def string_cleaner(self, s): return s.replace("b'", "").replace("'", "").replace('b"','').replace('"','').replace("\\n","\n").replace("\\r", "")
+    def __string_cleaner(self, s): return s.replace("b'", "").replace("'", "").replace('b"', '').replace('"', '').replace("\\n", "\n").replace("\\r", "")
+
+    def __save_img(self, path, imgname):
+        try:
+            f = fd.asksaveasfile(mode='w', initialfile=imgname + "." + self.fv.format)
+            if platform.system() == "Windows": command = "copy " + path + imgname + "." + self.fv.format + " " + f.name.replace("/", "\\") + " && del " + path + imgname + "." + self.fv.format
+            else: command = "mv " + path + imgname + "." + self.fv.format + " " + f.name
+            subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        except: pass

@@ -43,8 +43,8 @@ class MenuView(Observer):
         ###File Menu configuration####
         self.filemenu.add_command(label="Open (T)ype", command=lambda: controller.open_type("sub"))
         self.filemenu.add_command(label="Open (S)upertype", command=lambda: controller.open_type("sup"))
-        self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type(self.subname, self.t.get("1.0", "end-1c")))
-        self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type(self.supname, self.s.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type("sub", self.subname, self.t.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type("sup", self.supname, self.s.get("1.0", "end-1c")))
         self.filemenu.add_command(label="Dual", command=lambda: controller.dual(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
         ###Algorithms####
         for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
@@ -93,14 +93,16 @@ class MenuView(Observer):
     def __save(self, controller):
         for algconfig in self.config:
             if self.lastalg == algconfig['alg_name']:
-                controller.save_simulation_img(algconfig['simulation_file'].replace("/", "\\" if platform.system() == "Windows" else "/"), self.lastalg + "_" + self.subname + "_" + self.supname)
+                split = algconfig['simulation_file'].split("/")
+                controller.save_simulation_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], self.lastalg + "_" + self.subname + "_" + self.supname)
                 return
 
     def __show(self, controller):
-        for alg in self.config:
-            if alg['alg_name'] == self.lastalg:
-                controller.gen_img(alg['simulation_file'].replace("/", "\\" if platform.system() == "Windows" else "/"))
-                controller.show_img(alg['simulation_file'].replace("/", "\\" if platform.system() == "Windows" else "/"))
+        for algconfig in self.config:
+            if algconfig['alg_name'] == self.lastalg:
+                split = algconfig['simulation_file'].split("/")
+                controller.gen_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], split[1])
+                controller.show_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1])
                 return
 
     def __enable(self, algconfig):

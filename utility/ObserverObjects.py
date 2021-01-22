@@ -15,7 +15,7 @@ class Observer:
 
 class IOEvent:
     def __init__(self, location, text, filename, autofire=True):
-        self.name = "IOEvent"+location
+        self.name = "IOEvent" + location
         self.text = text
         self.filename = filename
         if autofire: self.fire()
