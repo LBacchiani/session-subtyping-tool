@@ -27,6 +27,7 @@ class WorkingArea(Observer):
         self.t = tk.Text(self.window, font=("Purisa",15), cursor="ibeam")
         self.show = tk.Button(self.window, text="Show Image", background='gray', highlightcolor='gray')
         self.save = tk.Button(self.window, text="Save Image", background='gray', highlightcolor='gray')
+        self.dual = tk.Button(self.window, text="Dualize Type", background='gray', highlightcolor='gray')
         self.d2 = tk.Label(self.window, background='lightgray')
         self.d3 = tk.Label(self.window, background='lightgray')
         self.d4 = tk.Label(self.window, background='lightgray')
@@ -58,9 +59,11 @@ class WorkingArea(Observer):
 
         ###Buttons###
         self.show.place(x=int(self.width * .07), y=int(self.height * .9))
+        self.dual.place(x=int(self.width * .21), y=int(self.height * .9))
         self.save.place(x=int(self.width * .35), y=int(self.height * .9))
         self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
         self.save.configure(command=lambda: self.controller.save_type_img(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
+        self.dual.configure(command=lambda: self.controller.dualize(self.t.get("1.0", "end-1c"), self.location))
 
         ###Scroll bar###
         self.scroll.config(command=self.t.yview)

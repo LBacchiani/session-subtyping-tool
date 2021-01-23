@@ -21,12 +21,9 @@ class Controller:
 
     def call_algorithm(self, algconfig, t, s, options, pics, steps): Thread(target=lambda: self.__alg_target(algconfig, t, s, options, pics, steps)).start()
 
-    def dual(self, t, s):
-        if t == "" or s == "":
-            showerror("Error", message="Missing type(s)")
-        else:
-            DualEvent("sub", self.__dualize(s))
-            DualEvent("sup", self.__dualize(t))
+    def dualize(self, t, location):
+        if t == "": showerror("Error", message="Missing type(s)")
+        else: DualEvent(location, self.__dualize(t))
 
     def open_type(self, location):
         try:

@@ -45,7 +45,7 @@ class MenuView(Observer):
         self.filemenu.add_command(label="Open (S)upertype", command=lambda: controller.open_type("sup"))
         self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type("sub", self.subname, self.t.get("1.0", "end-1c")))
         self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type("sup", self.supname, self.s.get("1.0", "end-1c")))
-        self.filemenu.add_command(label="Dual", command=lambda: controller.dual(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Dualize Subtyping", command=lambda: self.__dualize(controller, self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
         ###Algorithms####
         for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
 
@@ -85,6 +85,11 @@ class MenuView(Observer):
         else: self.supname = filename
 
     ##########################
+
+    def __dualize(self, controller, t, s):
+        controller.dualize(t, "sup")
+        controller.dualize(s, "sub")
+
 
     def __set_steps(self):
         user_input = simpledialog.askstring("Algorithms step setting", "Please insert steps number")
