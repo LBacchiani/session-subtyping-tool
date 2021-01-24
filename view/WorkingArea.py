@@ -71,7 +71,7 @@ class WorkingArea(Observer):
         self.scroll.place(x=int(self.width * 0.48), y=30, height=int(self.height * 0.8))
 
     def __on_dual_events(self, text):
-        self.filename = "dual_" + self.filename
+        self.filename = "dual_" + self.filename if not self.filename == "" else "dual.txt"
         self.ty.configure(text=self.ty['text'].split(" ")[0] + " " + self.filename + "*")
         self.t.delete('1.0', tk.END)
         self.t.insert('1.0', text)
@@ -92,7 +92,7 @@ class WorkingArea(Observer):
         self.pos.after(50, self.__update_pos)
 
     def __on_text_press(self):
-        if self.t.get("1.0", "end-1c") == self.lastty or self.t.get("1.0", "end-1c") == "": self.ty.configure(text=self.ty['text'].replace("*", ""))
+        if self.t.get("1.0", "end-1c") == self.lastty: self.ty.configure(text=self.ty['text'].replace("*", ""))
         elif "*" not in self.ty['text']: self.ty.configure(text=self.ty['text'] + "*")
 
     def __update_pos(self):
