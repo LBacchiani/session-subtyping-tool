@@ -56,10 +56,10 @@ class Controller:
         t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
         if platform.system() == "Windows":
             command = 'viewer\\win\\viewer ' + t_name + " && del " + t_name #ide
-            #command = 'viewer\\viewer ' + t_name    #standalone
+            #command = 'viewer\\viewer ' + t_name + " && del " + t_name   #standalone
         else:
             command = "viewer/osx/viewer " + t_name + " && rm " + t_name  #ide
-            #command = 'viewer/viewer ' + t_name     #standalone
+            #command = 'viewer/viewer ' + t_name + " && rm " + t_name    #standalone
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         if out.__contains__("Done"):
             self.gen_img(path, dotname, imgname)
