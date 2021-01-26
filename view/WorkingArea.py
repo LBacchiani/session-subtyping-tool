@@ -27,7 +27,7 @@ class WorkingArea(Observer):
         self.t = tk.Text(self.window, font=("Purisa",15), cursor="ibeam")
         self.show = tk.Button(self.window, text="Show Image", background='gray', highlightcolor='gray')
         self.save = tk.Button(self.window, text="Save Image", background='gray', highlightcolor='gray')
-        self.dual = tk.Button(self.window, text="Dualize Type", background='gray', highlightcolor='gray')
+        self.dual = tk.Button(self.window, text="Dual Type", background='gray', highlightcolor='gray')
         self.d2 = tk.Label(self.window, background='lightgray')
         self.d3 = tk.Label(self.window, background='lightgray')
         self.d4 = tk.Label(self.window, background='lightgray')

@@ -19,7 +19,9 @@ class Controller:
         self.fv = FileViewer(config)
         self.config = config
 
-    def call_algorithm(self, algconfig, t, s, options, pics, steps): Thread(target=lambda: self.__alg_target(algconfig, t, s, options, pics, steps)).start()
+    def call_algorithm(self, algconfig, t, s, options, pics, steps): Thread(target=lambda: self.__single_execution(algconfig, t, s, options, pics, steps)).start()
+
+    def run_all(self, t, s): Thread(target=lambda: self.__multiple_execution(t, s)).start()
 
     def dualize(self, t, location): DualEvent(location, self.__dualize(t))
 
@@ -79,10 +81,23 @@ class Controller:
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 
-    def __alg_target(self, algconfig, t, s, options, pics, steps):
-        out = self.__execute_command(algconfig, t, s, options, pics, steps).replace("b'", "").replace("'", "").replace('b"','').replace('"','').replace("\\n","\n")
+    def __single_execution(self, algconfig, t, s, options, pics, steps):
+        out = self.__execute_command(algconfig, t, s, options, pics, steps)
         if out.__contains__("True") and pics: AlgSuccessEvent(algconfig)
         showinfo("Subtyping Result", message=out)
+
+    def __multiple_execution(self, t, s):
+        outs = {}
+        for algconfig in self.config:
+            out = self.__execute_command(algconfig, t, s, algconfig['standard_exec'], False, "")
+            outs[algconfig['alg_name']] = out
+        self.pretty_res(outs)
+
+    def pretty_res(self, outs):
+        res = ""
+        for key in outs:
+            res += key + "\n" + outs[key] + "\n"
+        showinfo("Subtyping Result", message=res)
 
     def __dualize(self, ty):
         dual = ""

@@ -4,6 +4,8 @@ from controller.Controller import Controller
 import os
 import sys
 import json
+import subprocess
+from tkinter.messagebox import *
 
 def main():
     """
@@ -11,11 +13,8 @@ def main():
     application_path = os.path.dirname(sys.argv[0])
     os.chdir(application_path)
     os.chdir("../")
-
     ####Only for OSx standalone###
-    if platform.system() == "Darwin":
-        os.chdir("../../")
-        os.environ["PATH"] += os.pathsep + "/usr/local/bin"
+    if platform.system() == "Darwin": os.environ["PATH"] += os.pathsep + "/usr/local/bin"
     ################################
     """
     f = open("config.json")

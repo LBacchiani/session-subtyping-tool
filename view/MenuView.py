@@ -45,10 +45,11 @@ class MenuView(Observer):
         self.filemenu.add_command(label="Open (S)upertype", command=lambda: controller.open_type("sup"))
         self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type("sub", self.subname, self.t.get("1.0", "end-1c")))
         self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type("sup", self.supname, self.s.get("1.0", "end-1c")))
-        self.filemenu.add_command(label="Dualize Subtyping", command=lambda: self.__dualize(controller, self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Dual Subtyping", command=lambda: self.__dualize(controller, self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
+
         ###Algorithms####
         for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
-
+        self.algorithms.add_cascade(label="Run All", command=lambda: controller.run_all(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
         ###Simulation result configuration###
         self.simulation_res.add_cascade(label="Save Image", command=lambda: self.__save(controller))
         self.simulation_res.add_cascade(label="Show", command=lambda: self.__show(controller))
