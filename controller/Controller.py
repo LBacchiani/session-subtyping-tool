@@ -120,8 +120,12 @@ class Controller:
 
     def __save_img(self, path, imgname):
         try:
-            f = fd.asksaveasfile(mode='w', initialfile=imgname + "." + self.fv.format)
-            if platform.system() == "Windows": command = "copy " + path + imgname + "." + self.fv.format + " " + f.name.replace("/", "\\") + " && del " + path + imgname + "." + self.fv.format
-            else: command = "mv " + path + imgname + "." + self.fv.format + " " + f.name
+
+            if platform.system() == "Windows":
+                f = fd.asksaveasfile(mode='w', initialfile=imgname, defaultextension=self.fv.format)
+                command = "copy " + path + imgname + "." + self.fv.format + " " + f.name.replace("/", "\\") + " && del " + path + imgname + "." + self.fv.format
+            else:
+                f = fd.asksaveasfile(mode='w', initialfile=imgname + "." + self.fv.format)
+                command = "mv " + path + imgname + "." + self.fv.format + " " + f.name
             subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except: pass
