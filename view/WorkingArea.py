@@ -61,7 +61,7 @@ class WorkingArea(Observer):
         self.show.place(x=int(self.width * .07), y=int(self.height * .9))
         self.dual.place(x=int(self.width * .21), y=int(self.height * .9))
         self.save.place(x=int(self.width * .35), y=int(self.height * .9))
-        self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
+        self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", self.location, self.t.get("1.0", "end-1c")))
         self.save.configure(command=lambda: self.controller.save_type_img(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
         self.dual.configure(command=lambda: self.controller.dualize(self.t.get("1.0", "end-1c"), self.location))
 
