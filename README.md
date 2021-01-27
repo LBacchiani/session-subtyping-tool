@@ -42,7 +42,7 @@ In the Release section, you can find the executable version for:
 - OSx. When you download osx.zip move the extracted application from the downloads folder to the Desktop.
 - Windows
 
-## Original Algorithms Repositories:
+## Original Algorithm Repositories:
 - [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
 - [Fair Asynchronous Subtyping](https://github.com/julien-lange/fair-asynchronous-subtyping)
 - [Synchronous Subtyping](https://bitbucket.org/julien-lange/modelcheckingsessiontypesubtyping/src/master/)
