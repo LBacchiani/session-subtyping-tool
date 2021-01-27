@@ -2,8 +2,12 @@
 tmp/
 .idea/
 asynchronous-subtyping/.DS_Store
+asynchronous-subtyping/Checker*
 fair-asynchronous-subtyping/.DS_Store
+fair-asynchronous-subtyping/Checker*
 sync_subtyping/.DS_Store
+sync_subtyping/Checker*
+viewer/Viewer
 viewer/.DS_Store
 .DS_Store
 ####PYTHON STANDARD#####
