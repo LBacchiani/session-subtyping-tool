@@ -6,10 +6,6 @@ You will need Graphviz (dot) installed on your machine with the dot command inse
 
 - [Here](https://www2.graphviz.org/Packages/stable/windows/10/cmake/Release/x64/graphviz-install-2.44.1-win64.exe) you can find Graphviz for Windows. Aftar having    Graphviz installed, you will have to execute "dot -c" as administrator to make the tool supporting different image formats.
 - To install Graphviz for OSx you need a package manager. You can use [Homebrew](https://brew.sh) and install Graphiz with "brew install graphviz"
-- Compile Haskell sources (you can find them in session type utilities).
-- Put the Haskell generated executables in the correct folders: for algorithm executables the correct folder is name algoritmh/your OS, while the correct folder for type_viewer is viewer/your OS
-- If you are using a Linux distribution in general_config.json set the command used to open images from command line
-
 
 ## Source Code Usage:
 
@@ -18,6 +14,7 @@ Besides the aforementioned requirements, to use the source code version you will
 - [Python (3.X version)](https://www.python.org/downloads/)
 - [Ghc](https://www.haskell.org/platform/)
 - Depending on your setup, you might need to install extra Haskell packages (GHC's complaints will help you figure these out and you can install them with `cabal`).
+- If you are working on a Linux distribution, you will need to edit * general_config.json inserting the command used to open images from command line.
 
 ### Compiling Haskell sources:
 Here, we assume that you have a terminal open and that you are in one of the folder containing Haskell source code in session-type-utilities subdirectories (do the same for all algorithms and type viewer)
@@ -38,13 +35,10 @@ Then, move the generated executable inside proper folders:
 Here, we assume that you have a terminal open and that you are in the root of the project.
 * Run: `python SessionSubtypingTool.py`
 
-
-
-
-
-
-
-
+## Distribution:
+In the Release section, you can find the executable version for:
+- OSx. When you download osx.zip move the extracted application from the downloads folder to the Desktop.
+- Windows
 
 ## Original Algorithms Repositories:
 - [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
