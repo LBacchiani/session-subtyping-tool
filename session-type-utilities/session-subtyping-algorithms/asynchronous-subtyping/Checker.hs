@@ -81,6 +81,11 @@ main = do
     Left err -> do
                  putStrLn "Error in (T)ype"
                  print err
+                 case parseLocalType supinp of
+                   Left err -> do
+                               putStrLn "Error in (S)uperype"
+                               print err
+                   Right supans -> putStr ""
     Right subans ->
       case parseLocalType supinp of
         Left err -> do

@@ -66,9 +66,7 @@ class Controller:
         elif platform.system() == "Darwin":
             command = "viewer/osx/Viewer " + t_name + " && rm " + t_name  #ide
             #command = 'viewer/viewer ' + t_name + " && rm " + t_name    #standalone
-        else:
-            command = "viewer/linux/Viewer " + t_name + " && rm " + t_name  #linux distribution
-
+        else: command = "viewer/linux/Viewer " + t_name + " && rm " + t_name  #linux distribution
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         if out.__contains__("Done"):
             self.gen_img(path, dotname, imgname)
@@ -84,8 +82,7 @@ class Controller:
         s_name = self.__crete_tmp_type( "tmp\\" if platform.system() == "Windows" else "tmp/", "s_temp.txt", s)
         command = command.replace("[t1]", t_name).replace("[t2]", s_name)
         if platform.system() == "Windows": command = algconfig['win'] + command + " && del " + t_name + " && del " + s_name
-        elif platform.system() == "Darwin": command = algconfig['osx'] + command + " && rm " + t_name + " && rm " + s_name
-        else: command = algconfig['linux'] + command + " && rm " + t_name + " && rm " + s_name
+        else: command = algconfig['osx' if platform.system() == "Darwin" else 'linux'] + command + " && rm " + t_name + " && rm " + s_name
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 
@@ -104,6 +101,9 @@ class Controller:
     def pretty_res(self, outs):
         res = ""
         for key in outs:
+            if outs[key].__contains__("Error"):
+                res = outs[key]
+                break
             res += key + "\n" + outs[key] + "\n"
         showinfo("Subtyping Result", message=res)
 
