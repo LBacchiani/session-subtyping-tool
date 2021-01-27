@@ -9,3 +9,9 @@ You will need Graphviz (dot) installed on your machine with the dot command inse
 - Compile Haskell sources (you can find them in session type utilities).
 - Put the Haskell generated executables in the correct folders: for algorithm executables the correct folder is name algoritmh/your OS, while the correct folder for type_viewer is viewer/your OS
 - If you are using a Linux distribution in general_config.json set the command used to open images from command line
+
+
+## Original Algorithms:
+- [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
+- [Fair Asynchronous Subtyping](https://github.com/julien-lange/fair-asynchronous-subtyping)
+- [Synchronous Subtyping](https://bitbucket.org/julien-lange/modelcheckingsessiontypesubtyping/src/master/)
