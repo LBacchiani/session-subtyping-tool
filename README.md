@@ -1,6 +1,6 @@
-# session-subtyping-tool
+# Session-subtyping-tool
 
-## Requirements:
+## Executable and Source Code Version Requirements:
 
 You will need Graphviz (dot) installed on your machine with the dot command inserted in your PATH variable to generate graphs:
 
