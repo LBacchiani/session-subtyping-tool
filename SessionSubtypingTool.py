@@ -17,7 +17,7 @@ def main():
     if platform.system() == "Darwin": os.environ["PATH"] += os.pathsep + "/usr/local/bin"
     ################################
     """
-    f = open("config.json")
+    f = open("algorithms_config.json")
     config = json.load(f)
     controller = Controller(config)
     MainView(controller, config).create_gui()

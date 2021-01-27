@@ -143,8 +143,7 @@ class MenuView(Observer):
         self.exec_options[algconfig['alg_name']] = {}
         for flag in algconfig['execution_flag'].split(','):
             bool = tk.BooleanVar()
-            if flag == algconfig['standard_exec']:
-                bool.set(True)
+            if flag == algconfig['standard_exec']: bool.set(True)
             local[flag] = bool
             options_menu.add_checkbutton(label=flag, variable=bool, command=lambda value=flag: self.__unset_others(algconfig['alg_name'], value))
         self.exec_options[algconfig['alg_name']] = local

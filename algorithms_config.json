@@ -1,0 +1,40 @@
+[
+  {
+    "alg_name": "Async Subtyping",
+    "flag": "",
+    "execution_flag": "",
+    "standard_exec": "",
+    "visual_flag": "--pics",
+    "simulation_file": "tmp/simulation_tree",
+    "win": "asynchronous-subtyping\\win\\",
+    "osx": "asynchronous-subtyping/osx/",
+    "linux": "asynchronous-subtyping/linux/",
+    "exec_comm": "Checker [flags] [t1] [t2] [steps]"
+  },
+
+  {
+    "alg_name": "Fair Async Subtyping",
+    "flag": "",
+    "execution_flag": "",
+    "standard_exec": "",
+    "visual_flag": "--debug",
+    "simulation_file": "tmp/simulation_tree",
+    "win": "fair-asynchronous-subtyping\\win\\",
+    "osx": "fair-asynchronous-subtyping/osx/",
+    "linux": "fair-asynchronous-subtyping/linux/",
+    "exec_comm": "Checker [flags] [t1] [t2] [steps]"
+  },
+
+  {
+    "alg_name": "Sync Subtyping",
+    "flag": "",
+    "execution_flag": "--gayhole,--kozen",
+    "standard_exec": "--gayhole",
+    "visual_flag": "--pics",
+    "simulation_file": "tmp/simulation_tree",
+    "osx": "sync_subtyping/osx/",
+    "win": "sync_subtyping\\win\\",
+    "linux": "sync_subtyping/linux/",
+    "exec_comm": "Checker [flags] [t1] [t2]"
+  }
+]

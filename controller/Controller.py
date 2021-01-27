@@ -42,10 +42,14 @@ class Controller:
         except: pass
 
     def save_simulation_img(self, path, dotname, imgname):
-        if not os.path.isfile(dotname + "." + self.fv.format): self.fv.generate(path, dotname, imgname.replace(" ", "_"))
-        self.__save_img(path, imgname.replace(" ", "_"))
+        out = ""
+        if not os.path.isfile(dotname + "." + self.fv.format): out = self.fv.generate(path, dotname, imgname.replace(" ", "_"))
+        if out == "": self.__save_img(path, imgname.replace(" ", "_"))
+        else: showerror("Syntax Error", message=self.__string_cleaner(out))
 
-    def gen_img(self, path, dotname, imgname): self.fv.generate(path, dotname, imgname)
+    def gen_img(self, path, dotname, imgname):
+        out = self.fv.generate(path, dotname, imgname)
+        if not out == "": showerror("Syntax Error", message=self.__string_cleaner(out))
 
     def show_img(self, path, imgname): self.fv.show(path, imgname)
 
@@ -57,11 +61,14 @@ class Controller:
     def show_single_type(self, path, dotname, imgname, t, show=True):
         t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
         if platform.system() == "Windows":
-            command = 'viewer\\win\\viewer ' + t_name + " && del " + t_name #ide
+            command = 'viewer\\win\\Viewer ' + t_name + " && del " + t_name #ide
             #command = 'viewer\\viewer ' + t_name + " && del " + t_name   #standalone
-        else:
-            command = "viewer/osx/viewer " + t_name + " && rm " + t_name  #ide
+        elif platform.system() == "Darwin":
+            command = "viewer/osx/Viewer " + t_name + " && rm " + t_name  #ide
             #command = 'viewer/viewer ' + t_name + " && rm " + t_name    #standalone
+        else:
+            command = "viewer/linux/Viewer " + t_name + " && rm " + t_name  #linux distribution
+
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         if out.__contains__("Done"):
             self.gen_img(path, dotname, imgname)
@@ -77,7 +84,8 @@ class Controller:
         s_name = self.__crete_tmp_type( "tmp\\" if platform.system() == "Windows" else "tmp/", "s_temp.txt", s)
         command = command.replace("[t1]", t_name).replace("[t2]", s_name)
         if platform.system() == "Windows": command = algconfig['win'] + command + " && del " + t_name + " && del " + s_name
-        else: command = algconfig['osx'] + command + " && rm " + t_name + " && rm " + s_name
+        elif platform.system() == "Darwin": command = algconfig['osx'] + command + " && rm " + t_name + " && rm " + s_name
+        else: command = algconfig['linux'] + command + " && rm " + t_name + " && rm " + s_name
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 

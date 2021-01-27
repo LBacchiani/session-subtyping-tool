@@ -1,0 +1,7 @@
+[
+  {
+    "osx": "open [file]",
+    "linux": "put your standard file viewer here [file]",
+    "win": "[file]"
+  }
+]
