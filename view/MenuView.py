@@ -74,7 +74,9 @@ class MenuView(Observer):
             if algconfig['alg_name'] in self.misc_options.keys() or algconfig['alg_name'] in self.exec_options.keys():
                 self.options.add_cascade(label=algconfig["alg_name"], menu=options_menu)
         self.settings.add_checkbutton(label="Generate Graphs", variable=self.pic)
+        self.pic.set(True)
         self.settings.add_command(label="Set Steps", command=self.__set_steps)
+
 
     def on_io_events(self, location, filename):
         if location == "sub": self.subname = filename
@@ -85,7 +87,7 @@ class MenuView(Observer):
         if location == "sub": self.subname = filename
         else: self.supname = filename
 
-    ##########################
+    ####################################################
 
     def __dualize(self, controller, t, s):
         controller.dualize(t, "sup")

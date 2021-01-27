@@ -4,8 +4,6 @@ from controller.Controller import Controller
 import os
 import sys
 import json
-import subprocess
-from tkinter.messagebox import *
 
 def main():
     """
