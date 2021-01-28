@@ -38,9 +38,9 @@ Here, we assume that you have a terminal open and that you are in the root of th
 * Run: `python SessionSubtypingTool.py`
 
 ## Distribution:
-In the Release section, you can find the executable version for:
+In the Release section, you can find installers for:
 - OSx
-- Windows
+- Windows (TODO)
 
 ## Original Algorithm Repositories:
 - [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
