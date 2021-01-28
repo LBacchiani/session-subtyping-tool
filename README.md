@@ -39,7 +39,7 @@ Here, we assume that you have a terminal open and that you are in the root of th
 
 ## Distribution:
 In the Release section, you can find the executable version for:
-- OSx. When you download osx.zip move the extracted application from the downloads folder to the Desktop.
+- OSx
 - Windows
 
 ## Original Algorithm Repositories:
