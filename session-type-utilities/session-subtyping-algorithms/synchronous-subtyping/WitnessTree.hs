@@ -660,7 +660,7 @@ embeddingAutomata prod cons = helper [] [(tinit prod, tinit cons)]
 -- --------------------- PRINTING STUFF -----------------
 
 printNodeLabel :: IValue -> String
-printNodeLabel (i,(p,it)) = "<<table color='black'><tr><td><b>"++p++"</b></td><td>"
+printNodeLabel (i,(p,it)) = "<<table color='white'><tr><td color='black'><b>"++p++"</b></td><td color='black'>"
                             ++(inputTreeToHTLM it)
                             ++"</td></tr></table>>"
 
