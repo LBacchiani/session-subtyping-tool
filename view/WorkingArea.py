@@ -24,7 +24,7 @@ class WorkingArea(Observer):
         self.window = tk.Frame(root, width=self.width/2, height=self.height, background='gray')
         if location == "sub": self.ty = tk.Label(self.window, text="(T)ype: " + self.filename)
         else: self.ty = tk.Label(self.window, text="(S)upertype: " + self.filename)
-        self.t = tk.Text(self.window, font=("Purisa",15), cursor="ibeam")
+        self.t = tk.Text(self.window, font=("Purisa",15))
         self.show = tk.Button(self.window, text="Show Image", background='gray', highlightcolor='gray')
         self.save = tk.Button(self.window, text="Save Image", background='gray', highlightcolor='gray')
         self.dual = tk.Button(self.window, text="Dual Type", background='gray', highlightcolor='gray')
