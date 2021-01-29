@@ -1,4 +1,6 @@
-import tkinter as tk
+import platform
+if platform.system() == "Windows" or platform.system() == "Darwin": import tkinter as tk
+else: import Tkinter as tk
 from view.WorkingArea import WorkingArea
 from view.MenuView import MenuView
 

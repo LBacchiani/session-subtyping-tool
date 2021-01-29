@@ -1,6 +1,7 @@
-import tkinter as tk
-from utility.ObserverObjects import Observer
 import platform
+if platform.system() == "Windows" or platform.system() == "Darwin": import tkinter as tk
+else: import Tkinter as tk
+from utility.ObserverObjects import Observer
 
 class WorkingArea(Observer):
 

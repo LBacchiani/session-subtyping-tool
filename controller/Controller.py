@@ -8,7 +8,9 @@ Created on Thu Dec 24 17:21:09 2020
 
 import tkinter.filedialog as fd
 from threading import Thread
-from tkinter.messagebox import *
+import platform
+if platform.system() == "Windows" or platform.system() == "Darwin": from tkinter.messagebox import *
+else: from Tkinter.messagebox import *
 from controller.FileViewer import *
 from utility.ObserverObjects import *
 import os
