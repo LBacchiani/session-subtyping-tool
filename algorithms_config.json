@@ -9,7 +9,7 @@
     "win": "asynchronous-subtyping\\win\\",
     "osx": "asynchronous-subtyping/osx/",
     "linux": "asynchronous-subtyping/linux/",
-    "exec_comm": "Checker [flags] [t1] [t2] [steps]"
+    "exec_comm": "Checker [flags] [t1] [t2]"
   },
 
   {

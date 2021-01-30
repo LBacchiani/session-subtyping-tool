@@ -69,13 +69,15 @@ class MenuView(Observer):
         self.settings.add_cascade(label="Algorithm Options", menu=self.options)
         for algconfig in self.config:
             options_menu = tk.Menu(self.options)
+            if "[steps]" in algconfig['exec_comm']: options_menu.add_command(label="Set Steps", command=self.__set_steps)
             if len(algconfig["execution_flag"]) > 0: self.__set_exec_flag(algconfig, options_menu)
             if len(algconfig['flag']) > 0: self.__set_misc_options(algconfig, options_menu)
-            if algconfig['alg_name'] in self.misc_options.keys() or algconfig['alg_name'] in self.exec_options.keys():
+            if algconfig['alg_name'] in self.misc_options.keys() or \
+                    algconfig['alg_name'] in self.exec_options.keys() or "[steps]" in algconfig['exec_comm']:
                 self.options.add_cascade(label=algconfig["alg_name"], menu=options_menu)
         self.settings.add_checkbutton(label="Generate Graphs", variable=self.pic)
         self.pic.set(True)
-        self.settings.add_command(label="Set Steps", command=self.__set_steps)
+        #self.settings.add_command(label="Set Steps", command=self.__set_steps)
 
 
     def on_io_events(self, location, filename):
