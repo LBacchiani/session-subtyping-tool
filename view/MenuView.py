@@ -60,8 +60,9 @@ class MenuView(Observer):
         self.pics_format.add_radiobutton(label=".pdf", command=lambda: self.__set_format("pdf", controller))
         self.pics_format.add_radiobutton(label=".jpeg", command=lambda: self.__set_format("jpeg", controller))
         self.pics_format.add_radiobutton(label=".svg", command=lambda: self.__set_format("svg", controller))
+        
 
-        if platform.system() == "Windows": self.pics_format.invoke(1)  # .png standard format
+        if platform.system() == "Windows" or platform.system() == "Linux": self.pics_format.invoke(1)  # .png standard format
         else: self.pics_format.invoke(0)  # .png standard format
 
         ###Settings configuration###
