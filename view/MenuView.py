@@ -49,10 +49,10 @@ class MenuView(Observer):
 
         ###Algorithms####
         for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
-        self.algorithms.add_cascade(label="Run All", command=lambda: controller.run_all(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
+        self.algorithms.add_command(label="Run All", command=lambda: controller.run_all(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
         ###Simulation result configuration###
-        self.simulation_res.add_cascade(label="Save Image", command=lambda: self.__save(controller))
-        self.simulation_res.add_cascade(label="Show", command=lambda: self.__show(controller))
+        self.simulation_res.add_command(label="Save Image", command=lambda: self.__save(controller))
+        self.simulation_res.add_command(label="Show", command=lambda: self.__show(controller))
         self.menu.entryconfig("Simulation Result", state="disabled")
 
         ###Pics format###
@@ -62,8 +62,8 @@ class MenuView(Observer):
         self.pics_format.add_radiobutton(label=".svg", command=lambda: self.__set_format("svg", controller))
         
 
-        if platform.system() == "Windows" or platform.system() == "Linux": self.pics_format.invoke(1)  # .png standard format
-        else: self.pics_format.invoke(0)  # .png standard format
+        if platform.system() == "Darwin": self.pics_format.invoke(0)  # .png standard format
+        else: self.pics_format.invoke(1)  # .png standard format
 
         ###Settings configuration###
         self.settings.add_cascade(label="Pics Format", menu=self.pics_format)
@@ -78,7 +78,6 @@ class MenuView(Observer):
                 self.options.add_cascade(label=algconfig["alg_name"], menu=options_menu)
         self.settings.add_checkbutton(label="Generate Graphs", variable=self.pic)
         self.pic.set(True)
-        #self.settings.add_command(label="Set Steps", command=self.__set_steps)
 
 
     def on_io_events(self, location, filename):
