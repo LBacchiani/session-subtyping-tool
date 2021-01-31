@@ -16,13 +16,14 @@ Besides the aforementioned requirements, to use the source code version you will
 - [Python (3.X version)](https://www.python.org/downloads/)
 - [Ghc](https://www.haskell.org/platform/)
 - Depending on your setup, you might need to install extra Haskell packages (GHC's complaints will help you figure these out and you can install them with `cabal`).
-- If you are working on a Linux distribution, you will need to edit `general_config.json` inserting the command used to open images from command line.
+- Linux distribution only: you will need to edit `general_config.json` inserting the command used to open images from command line.
+- Linux distribution only: you might need to install Tkinter Python package.
 
 ### Compiling Haskell sources:
 Here, we assume that you have a terminal open and that you are in one of the folder containing Haskell source code in session-type-utilities subdirectories (do the same for all algorithms and type viewer)
 
 #### Compile Algorithms:
-  * Run: `ghc Checker`
+* Run: `ghc Checker`
  
 #### Compile Type Viewer:
 * Run: `ghc Viewer`
@@ -38,9 +39,9 @@ Here, we assume that you have a terminal open and that you are in the root of th
 * Run: `python SessionSubtypingTool.py`
 
 ## Distribution:
-In the Release section, you can find installers for:
+In the Release section, you can find executables for:
 - OSx
-- Windows (TODO)
+- Windows
 
 ## Original Algorithm Repositories:
 - [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
