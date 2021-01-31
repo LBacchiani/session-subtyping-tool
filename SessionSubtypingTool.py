@@ -11,7 +11,6 @@ def main():
     application_path = os.path.dirname(sys.argv[0])
     os.chdir(application_path)
     os.chdir("../")
-    ####Only for OSx standalone###
     if platform.system() == "Darwin": os.environ["PATH"] += os.pathsep + "/usr/local/bin"
     ################################
     """
