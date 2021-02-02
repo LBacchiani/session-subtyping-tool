@@ -1,6 +1,7 @@
 import platform
 import tkinter as tk
 from utility.ObserverObjects import Observer
+from threading import Thread
 
 class WorkingArea(Observer):
 
@@ -71,7 +72,7 @@ class WorkingArea(Observer):
         self.scroll.place(x=int(self.width * 0.48), y=30, height=int(self.height * 0.8))
 
     def __on_dual_events(self, text):
-        self.filename = "dual_" + self.filename if not self.filename == "" else "dual.txt"
+        if "dual" not in self.filename: self.filename = "dual_" + self.filename if not self.filename == "" else "dual.txt"
         self.ty.configure(text=self.ty['text'].split(" ")[0] + " " + self.filename + "*")
         self.t.delete('1.0', tk.END)
         self.t.insert('1.0', text)

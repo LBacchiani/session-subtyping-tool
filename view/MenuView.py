@@ -2,6 +2,7 @@ import platform
 import tkinter as tk
 from utility.ObserverObjects import Observer
 from tkinter import simpledialog
+from threading import Thread
 
 class MenuView(Observer):
 
@@ -50,20 +51,18 @@ class MenuView(Observer):
         ###Algorithms####
         for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
         self.algorithms.add_command(label="Run All", command=lambda: controller.run_all(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
+
         ###Simulation result configuration###
         self.simulation_res.add_command(label="Save Image", command=lambda: self.__save(controller))
         self.simulation_res.add_command(label="Show", command=lambda: self.__show(controller))
         self.menu.entryconfig("Simulation Result", state="disabled")
 
         ###Pics format###
-        self.pics_format.add_radiobutton(label=".png", command=lambda: self.__set_format("png", controller))
-        self.pics_format.add_radiobutton(label=".pdf", command=lambda: self.__set_format("pdf", controller))
-        self.pics_format.add_radiobutton(label=".jpeg", command=lambda: self.__set_format("jpeg", controller))
-        self.pics_format.add_radiobutton(label=".svg", command=lambda: self.__set_format("svg", controller))
-        
+        for format in ["png", "pdf", "jpeg", "svg"]: self.pics_format.add_radiobutton(label="."+format, command=lambda f=format: self.__set_format(f, controller))
 
         if platform.system() == "Darwin": self.pics_format.invoke(0)  # .png standard format
         else: self.pics_format.invoke(1)  # .png standard format
+
 
         ###Settings configuration###
         self.settings.add_cascade(label="Pics Format", menu=self.pics_format)
@@ -111,8 +110,7 @@ class MenuView(Observer):
         for algconfig in self.config:
             if algconfig['alg_name'] == self.lastalg:
                 split = algconfig['simulation_file'].split("/")
-                controller.gen_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], split[1])
-                controller.show_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1])
+                controller.gen_show_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], split[1], True)
                 return
 
     def __enable(self, algconfig):

@@ -6,7 +6,6 @@ import sys
 import json
 
 def main():
-    """
     #ONLY for STANDALONE VERSION
     application_path = os.path.dirname(sys.argv[0])
     os.chdir(application_path)
@@ -14,7 +13,6 @@ def main():
     ####Only for OSx standalone###
     if platform.system() == "Darwin": os.environ["PATH"] += os.pathsep + "/usr/local/bin"
     ################################
-    """
     f = open("algorithms_config.json")
     config = json.load(f)
     controller = Controller(config)

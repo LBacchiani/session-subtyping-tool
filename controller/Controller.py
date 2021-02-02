@@ -7,11 +7,16 @@ Created on Thu Dec 24 17:21:09 2020
 """
 
 import tkinter.filedialog as fd
+import os
 from threading import Thread
-from tkinter.messagebox import *
+from utility.Log import Log
 from controller.FileViewer import *
 from utility.ObserverObjects import *
-import os
+from utility.LexerErrorListener import LexerErrorListener
+from utility.ParserErrorListener import ParserErrorListener
+from antlr4 import *
+from gen.SessionTypeLexer import SessionTypeLexer
+from gen.SessionTypeParser import SessionTypeParser
 
 class Controller:
 
@@ -45,13 +50,12 @@ class Controller:
         out = ""
         if not os.path.isfile(dotname + "." + self.fv.format): out = self.fv.generate(path, dotname, imgname.replace(" ", "_"))
         if out == "": self.__save_img(path, imgname.replace(" ", "_"))
-        else: showerror("Syntax Error", message=self.__string_cleaner(out))
+        else: Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
 
-    def gen_img(self, path, dotname, imgname):
+    def gen_show_img(self, path, dotname, imgname, show=False):
         out = self.fv.generate(path, dotname, imgname)
-        if not out == "": showerror("Syntax Error", message=self.__string_cleaner(out))
-
-    def show_img(self, path, imgname): self.fv.show(path, imgname)
+        if not out == "": Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
+        elif show: self.fv.show(path, imgname)
 
     def save_type_img(self, path, dotname, imgname, t):
         out = "Done"
@@ -59,53 +63,44 @@ class Controller:
         if out.__contains__("Done"): self.__save_img(path, imgname)
 
     def show_single_type(self, path, dotname, imgname, t, show=True):
-        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
-        if platform.system() == "Windows":
-            command = 'viewer\\win\\Viewer ' + t_name + " && del " + t_name #ide
-            #command = 'viewer\\viewer ' + t_name + " && del " + t_name   #standalone
-        elif platform.system() == "Darwin":
-            command = "viewer/osx/Viewer " + t_name + " && rm " + t_name  #ide
-            #command = 'viewer/viewer ' + t_name + " && rm " + t_name    #standalone
-        else: command = "viewer/linux/Viewer " + t_name + " && rm " + t_name  #linux distribution
-        out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
-        if out.__contains__("Done"):
-            self.gen_img(path, dotname, imgname)
-            if show: self.show_img(path, imgname)
-        else: showinfo("Syntax Error", message=self.__string_cleaner(out))
+        parsed_t = self.__check(t, None, "", "")[0]
+        out = ""
+        if not parsed_t == "":
+            out = self.__call_outer_utility(parsed_t, "viewer", "Viewer")
+            if out.__contains__("Done"): self.gen_show_img(path, dotname, imgname, show)
+            else: Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
         return out
 
     ########################################################################
 
+    def __single_execution(self, algconfig, t, s, options, pics, steps):
+        parsed_t, parsed_s = self.__check(t, s, "(T)ype: ", "(S)upertype: ")
+        if not parsed_t == "" and not parsed_s == "":
+            out = self.__execute_command(algconfig, parsed_t, parsed_s, options, pics, steps)
+            if os.path.isfile(algconfig['simulation_file'] + ".dot" if not platform.system() == "Windows" else algconfig['simulation_file'].replace("/","\\") + ".dot") and pics: AlgSuccessEvent(algconfig)
+            Log("Subtyping Results", wscale=0.025, hscale=0.01, message=out)
+
+    def __multiple_execution(self, t, s):
+        outs = {}
+        parsed_t, parsed_s = self.__check(t, s, "(T)ype: ", "(S)upertype: ")
+        if not parsed_t == "" and not parsed_s == "":
+            for algconfig in self.config: outs[algconfig['alg_name']] = self.__execute_command(algconfig, parsed_t, parsed_s, algconfig['standard_exec'], False, "")
+            self.pretty_res(outs)
+
     def __execute_command(self, algconfig, t, s, options, pics, steps=""):
         command = algconfig['exec_comm'].replace("[flags]", algconfig["visual_flag"] + " " + options if pics else options).replace("[steps]", steps)
-        t_name = self.__crete_tmp_type( "tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
-        s_name = self.__crete_tmp_type( "tmp\\" if platform.system() == "Windows" else "tmp/", "s_temp.txt", s)
+        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
+        s_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "s_temp.txt", s)
         command = command.replace("[t1]", t_name).replace("[t2]", s_name)
         if platform.system() == "Windows": command = algconfig['win'] + command + " && del " + t_name + " && del " + s_name
         else: command = algconfig['osx' if platform.system() == "Darwin" else 'linux'] + command + " && rm " + t_name + " && rm " + s_name
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 
-    def __single_execution(self, algconfig, t, s, options, pics, steps):
-        out = self.__execute_command(algconfig, t, s, options, pics, steps)
-        if out.__contains__("True") and pics: AlgSuccessEvent(algconfig)
-        showinfo("Subtyping Result", message=out)
-
-    def __multiple_execution(self, t, s):
-        outs = {}
-        for algconfig in self.config:
-            out = self.__execute_command(algconfig, t, s, algconfig['standard_exec'], False, "")
-            outs[algconfig['alg_name']] = out
-        self.pretty_res(outs)
-
     def pretty_res(self, outs):
         res = ""
-        for key in outs:
-            if outs[key].__contains__("Error"):
-                res = outs[key]
-                break
-            res += key + "\n" + outs[key] + "\n"
-        showinfo("Subtyping Result", message=res)
+        for key in outs: res += key + "\n" + outs[key] + "\n"
+        Log("Subtyping Results", wscale=0.02, hscale=0.015, message=res)
 
     def __dualize(self, ty):
         dual = ""
@@ -117,9 +112,9 @@ class Controller:
             else: dual += c
         return dual
 
-    def __crete_tmp_type(self, dir, fn, t):
-        if not os.path.exists(dir): os.makedirs(dir)
-        f = open(dir + fn, "w")
+    def __crete_tmp_type(self, directory, fn, t):
+        if not os.path.exists(directory): os.makedirs(directory)
+        f = open(directory + fn, "w")
         f.write(t)
         f.close()
         return f.name
@@ -132,4 +127,51 @@ class Controller:
             if platform.system() == "Windows": command = "copy " + path + imgname + "." + self.fv.format + " " + f.name.replace("/", "\\") + " && del " + path + imgname + "." + self.fv.format
             else: command = "mv " + path + imgname + "." + self.fv.format + " " + f.name
             subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        except: pass
+        except: os.remove(path + imgname + "." + self.fv.format)
+
+    def __parse(self, t):
+        lexer = SessionTypeLexer(InputStream(t))
+        lexer_error_listener = LexerErrorListener()
+        lexer._listeners = [lexer_error_listener]
+        stream = CommonTokenStream(lexer)
+        parser = SessionTypeParser(stream)
+        parser_error_listener = ParserErrorListener()
+        parser._listeners = [parser_error_listener]
+        tree = parser.start()
+        return lexer_error_listener, parser_error_listener, tree.type
+
+    def __check(self, t, s, t_location, s_location):
+        t_lex_error, t_pars_error, parsed_t = self.__parse(t)
+        t_error_message = ""
+        s_error_message = ""
+        if t_lex_error.error != 0: t_error_message += t_lex_error.message
+        if t_pars_error.error != 0: t_error_message += t_pars_error.message
+        if t_error_message == "": t_error_message = self.__semantic_check(parsed_t, t_location)
+        else: t_error_message = t_location + " you had " + str(t_lex_error.error) + " lexical error(s) and " + str(t_pars_error.error) + " syntax error(s)\n\n" + t_error_message
+        if s is not None:
+            s_lex_error, s_pars_error, parsed_s = self.__parse(s)
+            if s_lex_error.error != 0: s_error_message += s_lex_error.message
+            if s_pars_error.error != 0: s_error_message += s_pars_error.message
+            if s_error_message == "": s_error_message = self.__semantic_check(parsed_s, s_location)
+            else: s_error_message = s_location + " you had " + str(s_lex_error.error) + " lexical error(s) and " + str(s_pars_error.error) + " syntax error(s)\n\n" + s_error_message
+        if not t_error_message == "" or not s_error_message == "":
+            Log(title="Error Log", wscale=0.03, hscale=0.02, message=(t_error_message if not t_error_message == "" else "") + ("------------------------------------------------\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
+            return "",""
+        return (parsed_t, parsed_s) if s is not None else (parsed_t, "")
+
+    def __semantic_check(self, parsed_t, location):
+        out = self.__call_outer_utility(parsed_t, "parser", "Main")
+        return location + " " + self.__string_cleaner(out) + "\n" if len(self.__string_cleaner(out)) > 1 else ""
+
+
+    def __call_outer_utility(self, parsed_t, mainfolder, executable):
+        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", parsed_t)
+        if platform.system() == "Windows":
+            command = mainfolder + '\\win\\' + executable + " " + t_name + " && del " + t_name #ide
+            #command = mainfolder + '\\' + executable + " " + t_name + " && del " + t_name   #standalone
+        elif platform.system() == "Darwin":
+            #command = command = mainfolder + '/osx/' + executable + " " + t_name + " && rm " + t_name  #ide
+            command = mainfolder + "/" + executable + " " + t_name + " && rm " + t_name    #standalone
+        else: command = mainfolder + "/linux/" + executable + " " + t_name + " && rm " + t_name  #linux distribution
+        return str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
+
