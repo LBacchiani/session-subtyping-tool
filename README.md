@@ -15,9 +15,9 @@ You will need Graphviz (dot) installed on your machine with the dot command inse
 Besides the aforementioned requirements, to use the source code version you will need:
 - [Python (3.X version)](https://www.python.org/downloads/)
 - [Ghc](https://www.haskell.org/platform/)
+- You will need to make ANTLR4 generating files into gen/
 - Depending on your setup, you might need to install extra Haskell packages (GHC's complaints will help you figure these out and you can install them with `cabal`).
-- **Linux distribution only:** you will need to edit `general_config.json` inserting the command used to open images from command line.
-- **Linux distribution only:** you might need to install Tkinter Python package.
+- Depending on your setup, you might need to install extra Python packages (Python's complaints will help you figure these out and you can install them).
 
 ### Compiling Haskell sources:
 Here, we assume that you have a terminal open and that you are in one of the folder containing Haskell source code in session-type-utilities subdirectories (do the same for all algorithms and type viewer)
@@ -28,11 +28,16 @@ Here, we assume that you have a terminal open and that you are in one of the fol
 #### Compile Type Viewer:
 * Run: `ghc Viewer`
 
+#### Compile Type Parser:
+* Run: `ghc Main`
+
 Then, move the generated executable inside proper folders:
 - Move asynchronous subtyping algorithm executable to asynchronous-subtyping/your OS 
 - Move fair asynchronous subtyping algorithm executable to fair-asynchronous-subtyping/your OS 
 - Move synchronous subtyping algorithm executable to sync_subtyping/your OS 
 - Move type viewer executable to viewer/your OS 
+- Move type parser executable to parser/your OS
+
 
 #### Run the Application:
 Here, we assume that you have a terminal open and that you are in the root of the project.
