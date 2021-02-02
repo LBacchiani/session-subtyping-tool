@@ -19,10 +19,6 @@ Besides the aforementioned requirements, to use the source code version you will
 - Depending on your setup, you might need to install extra Haskell packages (GHC's complaints will help you figure these out and you can install them with `cabal`).
 - Depending on your setup, you might need to install extra Python packages (Python's complaints will help you figure these out and you can install them).
 
-### Generate ANTLR4 code from SessionType.g4:
-Here, we assume that you have installed ANTLR4 and you have it either in your PATH or in the project root folder adn you have a terminal open in the project root folder
-* Run: `antlr4 -o gen/ -no-listener -Dlanguage=Python3 SessionType.g4`
-
 ### Compiling Haskell sources:
 Here, we assume that you have a terminal open and that you are in one of the folder containing Haskell source code in session-type-utilities subdirectories (do the same for all algorithms and type viewer)
 
