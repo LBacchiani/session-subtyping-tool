@@ -170,8 +170,8 @@ class Controller:
             command = mainfolder + '\\win\\' + executable + " " + t_name + " && del " + t_name #ide
             #command = mainfolder + '\\' + executable + " " + t_name + " && del " + t_name   #standalone
         elif platform.system() == "Darwin":
-            #command = command = mainfolder + '/osx/' + executable + " " + t_name + " && rm " + t_name  #ide
-            command = mainfolder + "/" + executable + " " + t_name + " && rm " + t_name    #standalone
+            command = command = mainfolder + '/osx/' + executable + " " + t_name + " && rm " + t_name  #ide
+            #command = mainfolder + "/" + executable + " " + t_name + " && rm " + t_name    #standalone
         else: command = mainfolder + "/linux/" + executable + " " + t_name + " && rm " + t_name  #linux distribution
         return str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
 
