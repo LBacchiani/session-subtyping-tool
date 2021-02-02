@@ -50,11 +50,11 @@ class Controller:
         out = ""
         if not os.path.isfile(dotname + "." + self.fv.format): out = self.fv.generate(path, dotname, imgname.replace(" ", "_"))
         if out == "": self.__save_img(path, imgname.replace(" ", "_"))
-        else: Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
+        else: Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
 
     def gen_show_img(self, path, dotname, imgname, show=False):
         out = self.fv.generate(path, dotname, imgname)
-        if not out == "": Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
+        if not out == "": Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
         elif show: self.fv.show(path, imgname)
 
     def save_type_img(self, path, dotname, imgname, t):
@@ -68,7 +68,7 @@ class Controller:
         if not parsed_t == "":
             out = self.__call_outer_utility(parsed_t, "viewer", "Viewer")
             if out.__contains__("Done"): self.gen_show_img(path, dotname, imgname, show)
-            else: Log("Error Log", wscale=0.03, hscale=0.02, message=self.__string_cleaner(out))
+            else: Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
         return out
 
     ########################################################################
@@ -147,15 +147,15 @@ class Controller:
         if t_lex_error.error != 0: t_error_message += t_lex_error.message
         if t_pars_error.error != 0: t_error_message += t_pars_error.message
         if t_error_message == "": t_error_message = self.__semantic_check(parsed_t, t_location)
-        else: t_error_message = t_location + " you had " + str(t_lex_error.error) + " lexical error(s) and " + str(t_pars_error.error) + " syntax error(s)\n\n" + t_error_message
+        else: t_error_message = t_location + "you had " + str(t_lex_error.error) + " lexical error(s) and " + str(t_pars_error.error) + " syntax error(s):\n" + t_error_message
         if s is not None:
             s_lex_error, s_pars_error, parsed_s = self.__parse(s)
             if s_lex_error.error != 0: s_error_message += s_lex_error.message
             if s_pars_error.error != 0: s_error_message += s_pars_error.message
             if s_error_message == "": s_error_message = self.__semantic_check(parsed_s, s_location)
-            else: s_error_message = s_location + " you had " + str(s_lex_error.error) + " lexical error(s) and " + str(s_pars_error.error) + " syntax error(s)\n\n" + s_error_message
+            else: s_error_message = s_location + "you had " + str(s_lex_error.error) + " lexical error(s) and " + str(s_pars_error.error) + " syntax error(s):\n" + s_error_message
         if not t_error_message == "" or not s_error_message == "":
-            Log(title="Error Log", wscale=0.03, hscale=0.02, message=(t_error_message if not t_error_message == "" else "") + ("------------------------------------------------\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
+            Log(title="Error Log", wscale=0.08, hscale=0.015, message=(t_error_message if not t_error_message == "" else "") + ("\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
             return "",""
         return (parsed_t, parsed_s) if s is not None else (parsed_t, "")
 

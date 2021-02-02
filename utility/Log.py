@@ -8,7 +8,7 @@ class Log(tk.Toplevel):
         self.width = self.winfo_screenwidth()
         self.height = self.winfo_screenheight()
         self.title(title)
-        self.t = tk.Text(self, font=("Purisa",15), width=int(wscale * self.width), height=int(hscale*self.height))
+        self.t = tk.Text(self, width=int(wscale * self.width), height=int(hscale*self.height))
         self.t.insert('1.0', message)
         self.scroll = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.t.yview)
         self.scroll.pack(side='right', fill=tk.Y)

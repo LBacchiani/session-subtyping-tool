@@ -8,4 +8,4 @@ class ParserErrorListener(ErrorListener):
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         self.error += 1
-        self.message += "Unexpected " + msg + " at " + str(line) + ":" + str(column + 1) + "\n\n"
+        self.message += "- Unexpected " + msg + " at " + str(line) + ":" + str(column + 1) + "\n"
