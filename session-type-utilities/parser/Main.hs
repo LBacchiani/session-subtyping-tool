@@ -45,7 +45,7 @@ main = do
     Left err -> print err
     Right ans ->
           if not (wellFormed ans)
-          then putStrLn "The type is not closed"
+          then putStrLn "The type is not well-formed (all recursion variables must be bound and nested recursion operators must use different variable names)"
           else
             do
             putStrLn ""

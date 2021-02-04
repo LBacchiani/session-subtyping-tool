@@ -161,7 +161,7 @@ class Controller:
 
     def __semantic_check(self, parsed_t, location):
         out = self.__call_outer_utility(parsed_t, "parser", "Main")
-        return location + " " + self.__string_cleaner(out) + "\n" if len(self.__string_cleaner(out)) > 1 else ""
+        return location + self.__string_cleaner(out) + "\n" if len(self.__string_cleaner(out)) > 1 else ""
 
 
     def __call_outer_utility(self, parsed_t, mainfolder, executable):
