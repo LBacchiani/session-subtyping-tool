@@ -15,7 +15,6 @@ You will need Graphviz (dot) installed on your machine with the dot command inse
 Besides the aforementioned requirements, to use the source code version you will need:
 - [Python (3.X version)](https://www.python.org/downloads/)
 - [Ghc](https://www.haskell.org/platform/)
-- You will need to make ANTLR4 generating files into gen/
 - Depending on your setup, you might need to install extra Haskell packages (GHC's complaints will help you figure these out and you can install them with `cabal`).
 - Depending on your setup, you might need to install extra Python packages (Python's complaints will help you figure these out and you can install them).
 
