@@ -1,4 +1,8 @@
 # Session-subtyping-tool
+The tool is avalable as source code and as executables.
+[Here](https://github.com/LBacchiani/session-subtyping-tool/releases/tag/v1.0.0) you can find session types examples and executables for:
+- OSx
+- Windows
 
 ## Executable and Source Code Version Requirements:
 
@@ -41,11 +45,6 @@ Then, move the generated executable inside proper folders:
 ### Run the Application:
 Here, we assume that you have a terminal open and that you are in the root of the project.
 * Run: `python SessionSubtypingTool.py`
-
-## Distribution:
-In the Release section, you can find executables for:
-- OSx
-- Windows
 
 ## Original Algorithm Repositories:
 - [Asynchronous Subtyping](https://github.com/julien-lange/asynchronous-subtyping)
