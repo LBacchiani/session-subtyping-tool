@@ -1,6 +1,5 @@
 # Session-subtyping-tool
-The tool is avalable as source code and as executables.
-[Here](https://github.com/LBacchiani/session-subtyping-tool/releases/tag/v1.0.0) you can find session types examples and executables for:
+The tool is also avalable as executables. [Here](https://github.com/LBacchiani/session-subtyping-tool/releases/) you can find session types examples and executables for:
 - OSx
 - Windows
 
