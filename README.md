@@ -1,7 +1,7 @@
 # Session-subtyping-tool
 The GUI-based tool is also avalable as executables. [Here](https://github.com/LBacchiani/session-subtyping-tool/releases/) you can find session types examples and executables for:
 - OSx (download macOS.dmg and drag the tool into the Applications folder and double click on the dragged application).
-- Windows (download win.zip and double click on Launcher.lnk in the main zip directory).
+- Windows (download win.zip, unzip it and double click on Launcher.lnk in the main unzipped directory).
 
 ## Executable and Source Code Version Requirements:
 
