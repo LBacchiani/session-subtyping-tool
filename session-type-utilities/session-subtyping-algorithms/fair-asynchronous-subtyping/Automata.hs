@@ -344,15 +344,41 @@ ampersand dir m q = not $ selfloop q q []
                         in L.or $ L.map (\x -> selfloop x trg (q:visited)) next
 
 
-
+-- type Transition = (State, (Label, State))
 isControllable :: Machine -> Bool
-isControllable m = helper [] (tinit m)
-  where helper seen q
-          | isFinal m q = True
-          | isInput m q = or $ next seen q
-          | isOutput m q = let ret = next seen q  in (not $ L.null ret) && (and ret)
-        next seen q =  L.map (\x -> helper ((q,x):seen) (snd x)) (L.filter (\x -> not ((q,x) `L.elem` seen)) $ successors m q)
+isControllable om = transform om (states om) []
+-- transform :: Machine -> [State] -> [Transition] -> Bool
+  where transform om stateL trans
+          | not $ L.null stateL = case isInput om (head stateL) of
+            False -> transform om (tail stateL) $ trans ++ L.filter(\x -> (fst x) == (head stateL)) (transitions om)
+            _ -> or $ L.map(\x -> transform om (tail stateL) $ x:trans) (L.filter(\x -> (fst x) == (head stateL)) (transitions om))
+          | otherwise = isOK Machine { states = states om, tinit = tinit om, transitions = trans, accepts = accepts om }
 
+
+isOK :: Machine -> Bool
+isOK om = helper [] (tinit om) om
+  where helper seen q m
+          | isFinal m q = True
+          | L.null (unseenSuccessors seen q m) = recursion seen q m
+          | isInput m q = or $ next seen q m
+          | isOutput m q = let ret = next seen q m  in (not $ L.null ret) && (and ret)
+        next seen q m=  L.map (\x -> helper ((q,x):seen) (snd x) m) (unseenSuccessors seen q m)
+
+        reachableEnd seen q m
+          | isFinal m q = True
+          | L.null (unseenSuccessors seen q m) =  False
+          | otherwise = or $ L.map (\x -> reachableEnd ((q,x):seen) (snd x) m) $ unseenSuccessors seen q m
+
+        unseenSuccessors seen q m = L.filter (\x -> not ((q,x) `L.elem` seen)) $ successors m q
+
+        recursion seen q m
+          | reachableEnd [] q m = helper [] q (addFinal m (head seen))
+          | otherwise = False
+        addFinal m t@(s,(l,e)) = Machine { states = states m ++ ["Rec"]
+                                         , tinit = tinit m
+                                         , transitions = [(s,(l,"Rec"))] ++ L.filter(\x -> not $ x == t) (transitions m)
+                                         , accepts = accepts m ++ ["Rec"]
+                                         }
 
 isStrongControllable :: Machine -> Bool
 isStrongControllable m = helper [] (tinit m)

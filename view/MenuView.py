@@ -1,8 +1,10 @@
 import platform
 import tkinter as tk
+
+from utility.Log import Log
 from utility.ObserverObjects import Observer
 from tkinter import simpledialog
-from threading import Thread
+import subprocess
 
 class MenuView(Observer):
 
@@ -96,8 +98,11 @@ class MenuView(Observer):
 
 
     def __set_steps(self):
-        user_input = simpledialog.askstring("Algorithms step setting", "Please insert steps number")
-        if user_input is not None and user_input.isnumeric(): self.steps = int(user_input)
+        user_input = simpledialog.askstring("Algorithms step setting", "Insert steps number of the next simulation")
+        if user_input is not None and user_input.isnumeric():
+            self.steps = int(user_input)
+            if self.steps <= 0: Log("Subtyping Results", wscale=0.025, hscale=0.01, message="Please insert a number > 0")
+
 
     def __save(self, controller):
         for algconfig in self.config:
@@ -124,6 +129,7 @@ class MenuView(Observer):
         if algconfig['alg_name'] in self.exec_options.keys(): options += self.__set_options(self.exec_options, algconfig['alg_name'])
         if algconfig['alg_name'] in self.misc_options.keys(): options += self.__set_options(self.misc_options, algconfig['alg_name'])
         controller.call_algorithm(algconfig, self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c"), options, self.pic.get(), "" if self.steps == 0 else str(self.steps))
+        self.steps = 0
 
     def __set_options(self, iterable, algname):
         options = ""
