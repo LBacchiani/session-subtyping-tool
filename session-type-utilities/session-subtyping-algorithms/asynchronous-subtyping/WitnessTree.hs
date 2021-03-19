@@ -163,9 +163,9 @@ checkingAlgorithm debug nomin bound t1 t2 =
           Just False -> putStrLn "Result: False"
           Nothing -> do rres <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
                         case rres of
-                          Just True -> putStrLn "Result: True"
-                          Just False -> putStrLn "Result: False"
-                          Nothing -> putStrLn "Result: Maybe"
+                          Just True -> if debug then putStrLn "Result: True\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: True"
+                          Just False -> if debug then putStrLn "Result: False\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: False"
+                          Nothing -> if debug then putStrLn "Result: Maybe\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
 
 
 
@@ -332,11 +332,11 @@ type TreeMap = Map IValue [(TLabel, CTree)]
 
 buildTree :: Machine -> Machine -> TreeMap -> [(IValue, TLabel)] -> String -> Value -> Maybe (TreeMap, CTree, Ancestors)
 buildTree m1 m2 sibs ps i val
-  | val `L.elem` (L.map (snd . fst) ps) =
+  | val `L.elem` (L.map (snd . fst) ps) = --incontra già la coppia val
       let anc = fst . head $ L.filter (\((j,x),y) -> x == val) ps
       in Just (M.empty, Node (i, val) [], M.singleton ((i, val)) anc)
 
-  | val `L.elem` (L.map snd $ M.keys sibs) =
+  | val `L.elem` (L.map snd $ M.keys sibs) = --tree map ci dice se a una certa coppia/nodo (IValue) è associato un albero
         let sibling = head $ L.filter (\(j,x) -> x == val) $ M.keys sibs
         in Just (M.empty, Node sibling (sibs M.! sibling), M.empty)
 

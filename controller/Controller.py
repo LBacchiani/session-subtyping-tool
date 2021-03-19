@@ -78,7 +78,7 @@ class Controller:
         if not parsed_t == "" and not parsed_s == "":
             out = self.__execute_command(algconfig, parsed_t, parsed_s, options, pics, steps)
             if os.path.isfile(algconfig['simulation_file'] + ".dot" if not platform.system() == "Windows" else algconfig['simulation_file'].replace("/","\\") + ".dot") and pics: AlgSuccessEvent(algconfig)
-            Log("Subtyping Results", wscale=0.025, hscale=0.01, message=out)
+            Log("Subtyping Results", wscale=0.06, hscale=0.01, message=out)
 
     def __multiple_execution(self, t, s):
         outs = {}
