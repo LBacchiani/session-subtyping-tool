@@ -163,7 +163,7 @@ checkingAlgorithm debug nomin bound t1 t2 =
           Nothing ->  do revCheck <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
                          case revCheck of
                               Just res -> if debug then putStrLn $ "Result: " ++ show res ++ "\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn $ "Result: " ++ show res
-                              Nothing -> if debug then putStrLn "Result: Maybe\nUsucessfully tried to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
+                              Nothing -> if debug then putStrLn "Result: Maybe\nUnsuccessfully tried to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
 
 
 
