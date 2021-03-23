@@ -44,29 +44,6 @@ writeToFile path content = do
 
   writeFile path content
 
-printMachine :: Machine -> String
-printMachine m =
-  let header = "digraph ICTS { \n "
-      footer = "}\n "
-      nodes = L.map (\x ->
-                      "q"++(x)++" [label=\""++(x)
-                      ++"\""++
-                      (
-                        if x==(tinit m)
-                        then " shape = \"box\""
-                        else ""
-                      )
-                      ++"]; \n "
-                    ) $ states m
-      transi = L.map (\(s,(l,t)) -> "q"++(s)++" -> "++"q"++(t)++" [label=\""++(mprintLabel l)++"\"]"++
-                                "; \n ") $ transitions m
-  in header++(foldstring nodes)++(foldstring transi)++footer
-  where foldstring s = L.foldr (++) "" s
-        mprintLabel (Send,a) = "!"++(a)
-        mprintLabel (Receive,a) = "?"++(a)
-
-machine2file :: Machine -> String -> IO ()
-machine2file m f = writeToFile ("tmp/"++f++"_cfsm.dot") (printMachine m)
 
 
 genState :: String -> (Map String State) -> LocalType -> State
@@ -419,3 +396,4 @@ translateFromHopcroft dfa = Machine { states = concat $ L.map (\(x,(y,z)) -> [x,
                  L.map flatten $
                  L.map (\(x,y) -> (show x, M.toList y)) $ M.toList $ FS.ss dfa
         flatten (s, xs) = L.map (\(y,z) -> (s,(y, show z))) xs
+

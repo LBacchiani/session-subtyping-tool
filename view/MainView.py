@@ -1,6 +1,7 @@
 import tkinter as tk
 from view.WorkingArea import WorkingArea
 from view.MenuView import MenuView
+import subprocess
 
 
 
@@ -10,7 +11,7 @@ class MainView:
     def __init__(self, controller, config):
         self.window = tk.Tk()
         self.config = config
-
+        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
         ###Utilities###
         self.maxwidth = self.window.winfo_screenwidth()
         self.maxheight = self.window.winfo_screenheight()
@@ -32,3 +33,8 @@ class MainView:
         self.f1.create_frame(tk.LEFT, self.custommenu)
         self.f2.create_frame(tk.RIGHT, self.custommenu)
         self.window.mainloop()
+
+    def on_closing(self):
+        subprocess.run("rm -r tmp", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.window.destroy()
+

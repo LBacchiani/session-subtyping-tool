@@ -51,29 +51,29 @@ checkingAlgorithm bound dual debug nomin t1 t2 =
       (m1, m2) = (if dual then swap else id) $ (fm $type2Machine nomin "-" t1, fm $ type2Machine nomin "+" t2)
   in do case buildTree bound debug m1 m2 of
           Nothing -> putStrLn "Result: Maybe"
-          Just (b',(to,ancs)) ->
+          Just (b',(to,ancs), errors) ->
             let t = tagRemovable m1 to
                 b = (not $ isControllable m2) || b'
             in
             do case prune m1 ancs t of
-                 Nothing -> do putStrLn ("Result: " ++ (show b))
+                 Nothing -> do putStrLn ("Result: " ++ (if not(b) && errors == [] then "Maybe" else show b) )
                                when debug $
                                  do
-                                    printDebugInfo m1 m2 t [] ancs
+                                    printDebugInfo m1 m2 t [] ancs errors
                                     when(not $ isControllable m2) $ putStrLn "Uncontrollable supertype: empty simulation graph generated"
 
                  Just t' -> do let ts = splitTree ancs t'
-                               putStrLn ("Result: " ++ (show $ b && (L.all (goodTree bound m1 ancs) ts)))
+                               putStrLn ("Result: " ++ (if not(b) && errors == [] then "Maybe" else show $ b && (L.all (goodTree bound m1 ancs) ts)))
                                when debug $
                                  do
-                                    printDebugInfo m1 m2 t ts ancs
+                                    printDebugInfo m1 m2 t ts ancs errors
                                     when(not $ isControllable m2) $ putStrLn "Uncontrollable supertype: empty simulation graph generated"
 
 subCheck :: Int -> Machine -> Machine -> Bool
 subCheck bound m1 m2 =
   case buildTree bound False m1 m2 of
     Nothing -> False
-    Just (b',(to,ancs)) ->
+    Just (b',(to,ancs), _) ->
       let t = tagRemovable m1 to
           b = (not $ isControllable m2) || b'
       in case prune m1 ancs t of
@@ -82,34 +82,35 @@ subCheck bound m1 m2 =
                      in b && (L.all (goodTree bound m1 ancs) ts)
 
 
-printDebugInfo :: Machine -> Machine -> CTree -> [CTree] -> Ancestors -> IO ()
-printDebugInfo m1 m2 t ts ancs =
+printDebugInfo :: Machine -> Machine -> CTree -> [CTree] -> Ancestors -> [IValue] -> IO ()
+printDebugInfo m1 m2 t ts ancs errors =
   do
-    writeToFile "tmp/simulation_tree.dot" (printTrees ancs [t])
-    writeToFile "tmp/witness_trees.dot" (printTrees ancs ts)
+    writeToFile "tmp/simulation_tree.dot" (printTrees ancs [t] errors)
+    writeToFile "tmp/witness_trees.dot" (printTrees ancs ts errors)
 
-buildTree :: Int -> Bool -> Machine -> Machine -> Maybe (Bool, (CTree, Ancestors))
+buildTree :: Int -> Bool -> Machine -> Machine -> Maybe (Bool, (CTree, Ancestors), [IValue]) -- The [IValue] represents all the errors found in the simulation game
 buildTree bound debug m1 m2 = helper bound ("0", (tinit m1, m2)) []
 
-  where helper :: Int -> IValue -> [(Label, IValue)] -> Maybe (Bool, (CTree, Ancestors))
+  where helper :: Int -> IValue -> [(Label, IValue)] -> Maybe (Bool, (CTree, Ancestors), [IValue])
         helper b v seen
-          | b == 0 = Nothing
+          | b == 0 =  Just (False, ((Node v [] Interm), M.empty), [])
           | otherwise = case findTwo v (L.map snd seen) of
-            Just anc -> Just (True, ((Node v [] Increase), M.singleton v anc))
+            Just anc -> Just (True, ((Node v [] Increase), M.singleton v anc), [])
             Nothing -> case oneStep debug m1 (snd v) of
                 Just ys -> continuation b v (nextconfs ys (fst v)) seen
-                Nothing -> Just (False, ((Node v [] Interm), M.empty))
+                Nothing -> Just (False, ((Node v [] Interm), M.empty), [v])
 
         nextconfs :: [(Label, Value)] -> String -> [(Label, IValue)]
         nextconfs xs i = snd $ mapAccumL (\x y -> (x+1, (fst y, (i++(show x), snd y )))) 0 xs
 
-        continuation :: Int -> IValue -> [(Label, IValue)] -> [(Label, IValue)] -> Maybe (Bool, (CTree, Ancestors))
+        continuation :: Int -> IValue -> [(Label, IValue)] -> [(Label, IValue)] -> Maybe (Bool, (CTree, Ancestors), [IValue])
         continuation b v xs seen = case sequencePair $ L.map (\(a,x) -> (a, helper (b-1) x ((a,v):seen))) xs of
           Nothing -> Nothing
-          Just ys -> let zs = L.map (\(l,(b,(t,ancs))) -> (l,t)) ys
-                         mps = L.map (\(l,(b,(t,ancs))) -> ancs) ys
-                         res = and $ L.map (\(l,(b,(t,ancs))) -> b) ys
-                     in Just (res, ((Node v zs Interm), M.unions mps))
+          Just ys -> let zs = L.map (\(l,(b,(t,ancs),err)) -> (l,t)) ys
+                         mps = L.map (\(l,(b,(t,ancs),err)) -> ancs) ys
+                         res = and $ L.map (\(l,(b,(t,ancs),err)) -> b) ys
+                         errors = L.concat $ L.map (\(l,(b,(t,ancs),err)) -> err) ys
+                     in Just (res, ((Node v zs Interm), M.unions mps), errors)
 
 
 
@@ -436,14 +437,14 @@ printNodeId  map (tag,v) = case M.lookup v map of
   Just s -> s
   Nothing -> error $ "Node "++(show v)++" not found."
 
-printNode :: NodeMap -> PrintV -> String
-printNode map v@(tag, (i,(p,m))) =
+printNode :: NodeMap -> [IValue] -> PrintV -> String
+printNode map errors v@(tag, (i,(p,m))) =
   let
      nm = rename (\s -> i++s) m
      node = (printNodeId map v)
-  in "subgraph cluster_conf"++node++" {\n" ++
-     (if node == "node00" then "graph[penwidth=3]\n"
-     else "")
+  in "subgraph cluster_conf"++node++" {\n"
+     ++(if node == "node00" then "graph[penwidth=3]\n" else "")
+     ++(if (i,(p,m)) `L.elem` errors then "graph[color=\"red\"]\n" else "")
      ++"label = \" L"++i++": "++p++"("++(printTag tag)++")"++"\";\n"
      ++(printNodeId map v)++"[style = invis];\n" -- style = invis
      ++(printMachineBody nm)
@@ -474,11 +475,11 @@ printAncestorEdge map (s',t') =
 
 
 
-printGraph :: Int -> PrintV -> [Edge] -> Ancestors -> String
-printGraph i init edges ancestors =
+printGraph :: Int -> PrintV -> [Edge] -> Ancestors -> [IValue] -> String
+printGraph i init edges ancestors errors =
   let nodes = nub $ concat $ L.map (\(s,(l,t)) -> [s,t]) edges
       nmap = mkNodeMap i nodes
-      snodes = intercalate "\n" $ L.map (printNode nmap) nodes
+      snodes = intercalate "\n" $ L.map (printNode nmap errors ) nodes
       sedges = intercalate "\n" $ L.map (printEdge nmap) edges
       ancs = intercalate "\n" $ L.map (printAncestorEdge nmap) $
              L.filter (\(t,s) -> (inlist t) && (inlist s)) $
@@ -488,18 +489,18 @@ printGraph i init edges ancestors =
      ++sedges++"\n"
      ++ancs++"\n"
 
-printTree :: Int -> Ancestors -> CTree -> String
-printTree i ancs t = let (init, edges) = mkGraph t
-                     in printGraph i init edges ancs
+printTree :: Int -> Ancestors -> CTree -> [IValue] -> String
+printTree i ancs t errors = let (init, edges) = mkGraph t
+                            in printGraph i init edges ancs errors
 
-printTrees :: Ancestors -> [CTree] -> String
-printTrees ancs list =  "digraph CTs { \n graph [fontsize=10 fontname=\"Verdana\" compound=true]; \n node [shape=record fontsize=10 fontname=\"Verdana\"]; \n rankdir = TD ranksep = 1.2 nodesep = 0.5; \n"++(helper $ snd $ mapAccumL (\x y -> (x+1, (x,y))) 0 list)++"}\n"
+printTrees :: Ancestors -> [CTree] -> [IValue] -> String
+printTrees ancs list errors =  "digraph CTs { \n graph [fontsize=10 fontname=\"Verdana\" compound=true]; \n node [shape=record fontsize=10 fontname=\"Verdana\"]; \n rankdir = TD ranksep = 1.2 nodesep = 0.5; \n"++(helper $ snd $ mapAccumL (\x y -> (x+1, (x,y))) 0 list)++"}\n"
   where helper ((i,x):xs) =
           let header = "subgraph cluster_"++(show i)
                        ++" {\n"
-              --         ++ "label = \""++(show i)++"\";\n" -- produce 0 iniziale
+              --         ++ "label = \""++(show i)++"\";\n"
               footer = "}\n"
-              tr = printTree i ancs x
+              tr = printTree i ancs x errors
           in (header++tr++footer)++"\n"++(helper xs)
         helper [] = ""
 

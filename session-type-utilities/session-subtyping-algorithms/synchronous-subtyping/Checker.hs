@@ -4,12 +4,9 @@ import Parser
 import GenModel
 import GenFormula
 import MCRLBridge
-import WitnessTree
+import Automata
 import KozenEtAl (reduce, genTermAutomata, aproduct, kozenSubtype)
-
-import GayAndHole (mkGHsubtyping)
--- import BLocalType (mksubtyping)
-
+import GayAndHole
 import Data.List as L
 import Data.Map as M
 import Data.Set as S
@@ -27,10 +24,6 @@ import Text.Printf (printf)
 -- DEBUG
 import System.IO.Unsafe
 import Debug.Trace
-
-writeToFile :: FilePath -> String -> IO()
-writeToFile file content = writeFile file content
-
 
 
 data Interaction = Passive
@@ -172,13 +165,13 @@ main = do
               when ((typingmode pargs) == GayHole || ((typingmode pargs) == GenAll)) $
                 do
                   start <- getPOSIXTime
-                  let out = (mkGHsubtyping subans supans)
-                  when (out) $
-                    do
-                    when ((pics pargs)) $
-                     do
-                      checkingAlgorithm (pics pargs) False 30 subans supans
-                  putStrLn $ "Result: " ++ show out
+                  let
+                    m1 = type2Machine False "-" subans
+                    m2 = type2Machine False "-" supans
+                    (err,sim) = subtyping m1 m2
+                  end <- getPOSIXTime
+                  when (pics pargs) $ do writeToFile "tmp/simulation_tree.dot" (printSimulation ((tinit m1),(tinit m2)) err sim)
+                  putStrLn $ "Result: " ++ show (err == [])
                   end <- getPOSIXTime
                   putStrLn $ "Time: " ++ (show $ end - start)
               when ((typingmode pargs) == Kozen || ((typingmode pargs) == GenAll)) $
@@ -205,3 +198,4 @@ parseModelChecker model formula =
   in do
     out <- readProcess "bash" ["-c",mcmd] []
     return $ (unpack. strip . pack $ out)=="true"
+

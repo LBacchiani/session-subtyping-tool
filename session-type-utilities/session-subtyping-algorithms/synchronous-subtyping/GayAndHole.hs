@@ -1,6 +1,7 @@
- {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 module GayAndHole where
 
+import Automata
 import Parser
 import Data.Set as S
 import Data.List as L
@@ -11,63 +12,76 @@ import System.IO.Unsafe
 import Debug.Trace
 
 
-type GoalMap = Map (LocalType) (Set (LocalType))
-type Goals = (GoalMap, GoalMap)
-
-emptyGoals :: Goals
-emptyGoals = (M.empty, M.empty)
+type Step = ((State,State),((Label,(State,State))))
+type Simulation = [Step]
 
 
--- g1 :: Map Subtype=Rec X.T  ---> (Set Supertype)
--- g2 :: Map Supertype=Rec X.T  ---> (Set Subtype)
---
-lookupGoal :: Bool -> Goals -> LocalType -> LocalType -> Bool
-lookupGoal left (g1, g2) t1 t2 = if left
-                                 then (search g1 t1 t2) || (search g2 t2 t1)
-                                 else (search g2 t2 t1) || (search g1 t1 t2)
-  where search g t1 t2 =  case M.lookup t1 g of
-          Just t ->  t2 `S.member` t
-          Nothing -> False
+subtyping :: Machine -> Machine -> ([(State,State)],Simulation)
+subtyping m1 m2 = helper m1 m2 (tinit m1) (tinit m2) []
+  where helper m1 m2 curr1 curr2 marked
+          | (curr1,curr2) `L.elem` marked = ([],[])
+          | (isFinal m1 curr1) && (isFinal m2 curr2) = ([],[])
+          | (isInput m1 curr1) && (isInput m2 curr2) =
+            let
+              l1 = L.map(\(s1,(l,s2)) -> l) (L.filter(\(s1,(l,s2)) -> s1 == curr1)(transitions m1))
+              l2 = L.map(\(s1,(l,s2)) -> l) (L.filter(\(s1,(l,s2)) -> s1 == curr2)(transitions m2))
+            in case (S.fromList l2) `isSubsetOf` (S.fromList l1) of
+              True -> L.foldl(\(err,sim) x -> let target1 = targetState (transitions m1) curr1 x
+                                                  target2 = targetState (transitions m2) curr2 x
+                                                  (currErr,currSim) = helper m1 m2 target1 target2 ((curr1,curr2):marked)
+                                              in (err ++ currErr, ((curr1,curr2),(x,(target1,target2))):(sim ++ currSim))) ([],[]) l2
+              False -> ([(curr1,curr2)],[])
+          | (isOutput m1 curr1) && (isOutput m2 curr2) =
+            let
+              l1 = L.map(\(s1,(l,s2)) -> l) (L.filter(\(s1,(l,s2)) -> s1 == curr1)(transitions m1))
+              l2 = L.map(\(s1,(l,s2)) -> l) (L.filter(\(s1,(l,s2)) -> s1 == curr2)(transitions m2))
+            in case (S.fromList l1) `isSubsetOf` (S.fromList l2) of
+              True -> L.foldl(\(err,sim) x -> let target1 = targetState (transitions m1) curr1 x
+                                                  target2 = targetState (transitions m2) curr2 x
+                                                  (currErr,currSim) = helper m1 m2 target1 target2 ((curr1,curr2):marked)
+                                              in (err ++ currErr, ((curr1,curr2),(x,(target1,target2))):(sim ++ currSim))) ([],[]) l1
+              False -> ([(curr1,curr2)],[])
+          | otherwise = ([(curr1,curr2)],[])
+
+targetState :: [Transition] -> State -> Label -> State
+targetState transitions currState currTrans = head (L.map(\(s1,(l,s2)) -> s2) (L.filter(\(s1,(l,s2)) -> (s1 == currState) && (l == currTrans)) (transitions)))
 
 
-insertGoal :: GoalMap -> LocalType -> LocalType  -> GoalMap
-insertGoal goals t1 t2 = M.insertWith (S.union) t1 (S.singleton t2) goals
+-------------------------------------------------------------PRINTING STUFF------------------------------------------------------------------
 
 
+printSimulation :: (State,State) -> [(State,State)] -> Simulation -> String
+printSimulation initials blockings sim = case sim of
+  [] -> "digraph CTs {\n subgraph cluster {\n}\n}"
+  _ -> "digraph CTs {\n subgraph cluster {\n" ++ printNodes initials blockings sim ++ printTransitions sim ++ "}\n}\n"
 
--- maxTerm :: [(LocalType, LocalType)] -> LocalType
--- maxTerm [] = End
--- maxTerm xs = L.maximum $ (L.map fst xs)++(L.map snd xs)
+printNodes :: (State,State) -> [(State,State)] -> Simulation -> String
+printNodes initials blockings sim = helper initials blockings sim [] ""
+  where helper initials blockings (x:xs) seen toPrint
+          | ((fst x) `L.elem` seen) && ((snd (snd x)) `L.elem` seen) = if checkLast xs then toPrint else helper initials blockings xs seen toPrint
+          | (fst x) `L.elem` seen = let newOut = toPrint ++ printSingleNode initials (snd (snd x)) blockings in if checkLast xs then newOut else helper initials blockings xs ((fst x):seen) newOut
+          | (snd (snd x)) `L.elem` seen = let newOut = toPrint ++ printSingleNode initials (fst x) blockings in if checkLast xs then newOut else helper initials blockings xs ((snd (snd x)):seen) newOut
+          | otherwise = let newOut = toPrint ++ printSingleNode initials (fst x) blockings ++ printSingleNode initials (snd (snd x)) blockings in if checkLast xs then newOut else helper initials blockings xs ([(fst x),(snd (snd x))] ++ seen) newOut
 
-mkGHsubtyping :: LocalType -> LocalType -> Bool
-mkGHsubtyping t1 t2 = subtyping emptyGoals t1 t2
 
-subtyping :: Goals -> LocalType -> LocalType -> Bool
-subtyping goals End End =
-  True
-subtyping goals@(g1, g2) t1@(Rec s t') t2 =
-  (lookupGoal True goals t1 t2)
-  ||
-  (subtyping (insertGoal g1 t1 t2, g2) (substitute s t1 t') t2)
-subtyping goals@(g1, g2) t1 t2@(Rec s t') =
-  (lookupGoal False goals t1 t2)
-  ||
-  (subtyping (g1, insertGoal g2 t2 t1) t1 (substitute s t2 t'))
-subtyping goals (Choice dir xs) (Choice dir' ys) =
-  let pairs = getPairs xs
-      pairs' = getPairs ys
-      prod = [(t,t') | (m,t) <- pairs, (m',t') <- pairs', m == m']
-      mkset s =  S.fromList (L.map fst s)
-      !checkSub = if (dir == Send)
-                  then (mkset pairs)  `isSubsetOf` (mkset pairs')
-                  else (mkset pairs') `isSubsetOf` (mkset pairs)
-  in
-   (dir == dir')
-   && checkSub
-   && (and $ L.map (uncurry $ subtyping goals) prod)
-subtyping goals (Act dir s lt) sup =
-  subtyping goals (Choice dir [Act dir s lt]) sup
-subtyping goals sub (Act dir s lt) =
-  subtyping goals sub (Choice dir [Act dir s lt])
-subtyping _ End _ = False
-subtyping _ _ End = False
+printSingleNode :: (State,State) -> (State,State) -> [(State,State)] -> String
+printSingleNode initials currents blockings = case blockings of
+        [] -> "  node" ++ (fst currents) ++ (snd currents) ++ "[shape = \"rectangle\" color =\"black\""  ++ (if initials == currents then "penwidth = 3" else "") ++ " label=<<table color='white'><tr><td color='black'><b>" ++ (fst currents) ++ "</b></td><td color='black'><b><font color='black'>" ++ (snd currents) ++ "</font></b></td></tr></table>>];\n"
+        _ -> "  node" ++ (fst currents) ++ (snd currents) ++ "[shape = \"rectangle\" " ++ (if currents `L.elem` blockings then "color =\"red\"" else "color =\"black\"")  ++ (if initials == currents then " penwidth = 3" else "") ++ " label=<<table color='white'><tr><td color='black'><b>" ++ (fst currents) ++ "</b></td><td color='black'><b><font color='black'>" ++ (snd currents) ++ "</font></b></td></tr></table>>];\n"
+
+printTransitions :: Simulation -> String
+printTransitions sim = helper sim ""
+  where helper (x:xs) toPrint
+          | checkLast xs = " node" ++ (fst (fst x)) ++ (snd (fst x)) ++ "->" ++ "node" ++  (fst (snd (snd x))) ++ (snd (snd (snd x))) ++ "[label=\"" ++ printTransitionLabel (fst (snd x)) ++ "\"]\n"
+          | otherwise = helper xs toPrint ++ " node" ++ (fst (fst x)) ++ (snd (fst x)) ++ "->" ++ "node" ++  (fst (snd (snd x))) ++ (snd (snd (snd x))) ++ "[label=\"" ++ printTransitionLabel (fst (snd x)) ++ "\"]\n"
+
+printTransitionLabel :: Label -> String
+printTransitionLabel l = case l of
+          (Send, name) -> "!" ++ name
+          (Receive, name) -> "?" ++ name
+
+checkLast :: Simulation -> Bool
+checkLast [] = True
+checkLast [x] = False
+checkLast (x:xs) = False
+

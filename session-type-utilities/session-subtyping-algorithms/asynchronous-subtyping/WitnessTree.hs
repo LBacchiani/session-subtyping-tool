@@ -157,43 +157,31 @@ checkingAlgorithm :: Bool ->  Bool -> Int -> LocalType -> LocalType -> IO ()
 checkingAlgorithm debug nomin bound t1 t2 =
   let m1 = type2Machine nomin "-" t1
       m2 = type2Machine nomin "+" t2
-  in do res <- fullCheck debug nomin "" m1 m2
-        case res of
-          Just True -> putStrLn "Result: True"
-          Just False -> putStrLn "Result: False"
-          Nothing -> do rres <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
-                        case rres of
-                          Just True -> if debug then putStrLn "Result: True\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: True"
-                          Just False -> if debug then putStrLn "Result: False\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: False"
-                          Nothing -> if debug then putStrLn "Result: Maybe\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
+  in do check <- fullCheck debug nomin "" m1 m2
+        case check of
+          Just res -> putStrLn $ "Result: " ++ show res
+          Nothing ->  do revCheck <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
+                         case revCheck of
+                              Just res -> if debug then putStrLn $ "Result: " ++ show res ++ "\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn $ "Result: " ++ show res
+                              Nothing -> if debug then putStrLn "Result: Maybe\nUsucessfully tried to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
 
 
 
 fullCheck ::  Bool -> Bool -> String -> Machine -> Machine -> IO (Maybe Bool)
 fullCheck debug nomin pref m1 m2 =
-  let res = buildTree m1 m2 M.empty [] "0" (tinit m1, Q $ tinit m2 )
-  in case res of
-         Nothing -> return $ Just False
-         Just (vs, t, mp) -> let ct = mkCandidateSubtrees mp t
-                                 sct = L.map (isSafeSubTree m1 m2 mp) ct
-                                 fi = L.map (isFinite m1 m2 mp) ct
-                                 produce = L.map (genProduceEnvi m2 mp) ct
-                                 consume = L.map (genConsumeEnvi mp)  ct
-                                 embs = L.map (checkEmbedding nomin m2 mp) ct
-                             in do when debug $ do --putStrLn $ "Finite subtrees: "++(show fi)
-                                                   --putStrLn $ "Canditate subtrees: "++(show sct)
-                                                   --putStrLn $ "Tree embedding: "++(show embs)
-                                                   --
-                                                   writeToFile "tmp/simulation_tree.dot" (printTrees mp [t])
-                                                   --mkPicture "tmp/simulation_tree.dot" (pref++"simulation_tree.png")
-                                                   writeToFile "tmp/candidate_trees.dot" (printTrees mp ct)
-                                                   --mkPicture "candidate_trees.dot" (pref++"candidate_trees.png")
-                                                   --
-                                                   genEIT nomin pref m2 mp ct
+  let ((vs, t, mp), errors) = buildTree m1 m2 M.empty [] "0" (tinit m1, Q $ tinit m2 )
+      ct = mkCandidateSubtrees mp t
+      sct = L.map (isSafeSubTree m1 m2 mp) ct
+      fi = L.map (isFinite m1 m2 mp) ct
+      produce = L.map (genProduceEnvi m2 mp) ct
+      consume = L.map (genConsumeEnvi mp)  ct
+      embs = L.map (checkEmbedding nomin m2 mp) ct
+  in do when debug $ do writeToFile "tmp/simulation_tree.dot" (printTrees mp [t] errors)
+                        writeToFile "tmp/candidate_trees.dot" (printTrees mp ct errors)
+        if errors == []
+        then return $ if and $ L.map (\(x,y,z) -> x || (y && z)) $ zip3 fi sct embs then Just(True) else Nothing
+        else return $ Just(False)
 
-                                   if and $ L.map (\(x,y,z) -> x || (y && z)) $ zip3 fi sct embs
-                                     then return $ Just True
-                                     else return Nothing
 
 genEIT :: Bool -> String -> Machine -> Ancestors -> [CTree] -> IO ()
 genEIT nomin pref m2 mp ts = helper 1 ts
@@ -330,44 +318,33 @@ addTree mp (T xs) = T $ L.map (\(a,t) -> (a, addTree mp t)) xs
 
 type TreeMap = Map IValue [(TLabel, CTree)]
 
-buildTree :: Machine -> Machine -> TreeMap -> [(IValue, TLabel)] -> String -> Value -> Maybe (TreeMap, CTree, Ancestors)
+buildTree :: Machine -> Machine -> TreeMap -> [(IValue, TLabel)] -> String -> Value  -> ((TreeMap, CTree, Ancestors),[Value]) -- The [Value] represents all the errors found in the simulation game
 buildTree m1 m2 sibs ps i val
-  | val `L.elem` (L.map (snd . fst) ps) = --incontra già la coppia val
+  | val `L.elem` (L.map (snd . fst) ps) =
       let anc = fst . head $ L.filter (\((j,x),y) -> x == val) ps
-      in Just (M.empty, Node (i, val) [], M.singleton ((i, val)) anc)
-
-  | val `L.elem` (L.map snd $ M.keys sibs) = --tree map ci dice se a una certa coppia/nodo (IValue) è associato un albero
-        let sibling = head $ L.filter (\(j,x) -> x == val) $ M.keys sibs
-        in Just (M.empty, Node sibling (sibs M.! sibling), M.empty)
-
-
+      in ((M.empty, Node (i, val) [], M.singleton ((i, val)) anc),[])
+  | val `L.elem` (L.map snd $ M.keys sibs) =
+      let sibling = head $ L.filter (\(j,x) -> x == val) $ M.keys sibs
+      in ((M.empty, Node sibling (sibs M.! sibling), M.empty),[])
   | otherwise =
   case getAncestorPair (L.map fst ps) (i,val) of
-   Nothing -> cont
-   Just (ni,nj) -> if extract (getIntermPath ps ni nj) (snd . snd $ ni) (snd val)
-                   then Just (M.empty, Node (i, val) [], M.singleton ((i, val)) ni)
-                   else cont
+      Nothing -> cont
+      Just (ni,nj) -> if extract (getIntermPath ps ni nj) (snd . snd $ ni) (snd val)
+                      then ((M.empty, Node (i, val) [], M.singleton ((i, val)) ni),[])
+                      else cont
   where cont = case oneStep m1 m2 val of
-          Nothing -> Nothing
-          Just next -> let rets = snd $ mapAccumL
-                                  (\(j,sbs) (x,y) ->
-                                    let rbt = buildTree m1 m2 sbs (ps++[((i, val),x)]) (i++(show $ j+1)) y
-                                    in case rbt of
-                                      Nothing -> ((j+1,M.empty), (x, Nothing))
-                                      Just (nsbs, ct, mnp) -> ((j+1, M.unions [nsbs, sbs]), (x, Just (nsbs, ct, mnp)))
-                                  )
-                                  (0, M.empty) next
-                           chs = L.map (\(x, t) -> case t of
-                                         Nothing -> Nothing
-                                         Just (vseen, t', m') -> Just ((x,t'), m')
-                                       ) rets
-                       in case sequence chs of
-                           Nothing -> Nothing
-                           Just sqs -> Just (M.singleton (i,val) (L.map fst sqs), Node (i, val) (L.map fst sqs), M.unions $ L.map snd sqs)
+               Just next -> let ((_,_,err),rets) = mapAccumL (\(j,sbs,errorList) (x,y) ->
+                                                   let ((nsbs, ct, mnp),currErrors) = buildTree m1 m2 sbs (ps++[((i, val),x)]) (i++(show $ j+1)) y
+                                                   in ((j+1, if currErrors == [] then M.unions [nsbs, sbs] else M.empty, currErrors ++ errorList), (x, (nsbs, ct, mnp)))) (0,M.empty,[]) next -- in case of problems put if errors == [] then M.empty else mnp
+                                sqs = L.map (\(x,(vseen, t', m')) -> ((x,t'),m')) rets
+                            in ((M.singleton (i,val) (L.map fst sqs), Node (i, val) (L.map fst sqs), M.unions $ L.map snd sqs), rmdups $ err)
+               Nothing -> ((M.empty, Node (i, val) [], M.empty), [val])
 
 
-
-
+rmdups :: Eq a => [a] -> [a]
+rmdups [] = []
+rmdups (x:xs)   | x `elem` xs   = rmdups xs
+                | otherwise     = x : rmdups xs
 
 
 extract :: [Message] -> InputTree -> InputTree -> Bool
@@ -672,12 +649,12 @@ printNodeId  map v = case M.lookup v map of
                       Just s -> s
                       Nothing -> error $ "Node "++(show v)++" not found."
 
-printNode :: NodeMap -> IValue -> String
-printNode map v = --(printNodeId map v)++"[label="++(printNodeLabel v)++"];"
+printNode :: NodeMap -> IValue -> [Value] -> String
+printNode map v errors = --(printNodeId map v)++"[label="++(printNodeLabel v)++"];"
       let
          n = (printNodeId map v)
       in if n == "node00" then n++"[shape = \"rectangle\" penwidth = 3 label="++(printNodeLabel v)++"];"
-         else n++"[shape = \"rectangle\" label="++(printNodeLabel v)++"];"
+         else n++"["++ (if (snd v) `L.elem` errors then "color = \"red\"" else "color = \"black\"") ++ " shape = \"rectangle\" label="++(printNodeLabel v)++"];"
 
 mkGraph :: CTree -> (IValue, [Edge])
 mkGraph (Node v xs) = (v, helper v xs)
@@ -691,11 +668,11 @@ printEdge map (s,(l,t)) = (printNodeId map s)++" -> "++(printNodeId map t)++"[la
 printAncestorEdge :: NodeMap -> (IValue, IValue) -> String
 printAncestorEdge map (s,t) = (printNodeId map s)++" -> "++(printNodeId map t)++"[style=dashed];"
 
-printGraph :: Int -> IValue -> [Edge] -> Ancestors -> String
-printGraph i init edges ancestors =
+printGraph :: Int -> IValue -> [Edge] -> Ancestors -> [Value] -> String
+printGraph i init edges ancestors errors =
   let nodes = nub $ concat $ L.map (\(s,(l,t)) -> [s,t]) edges
       nmap = mkNodeMap i nodes
-      snodes = intercalate "\n" $ L.map (printNode nmap) nodes
+      snodes = intercalate "\n" $ L.map (\x-> printNode nmap x errors) nodes
       sedges = intercalate "\n" $ L.map (printEdge nmap) edges
       ancs = intercalate "\n" $ L.map (printAncestorEdge nmap) $
              L.filter (\(t,s) -> (t `L.elem` nodes) && (s `L.elem` nodes)) $
@@ -704,18 +681,18 @@ printGraph i init edges ancestors =
      ++sedges++"\n"
      ++ancs++"\n"
 
-printTree :: Int -> Ancestors -> CTree -> String
-printTree i ancs t = let (init, edges) = mkGraph t
-                     in printGraph i init edges ancs
+printTree :: Int -> Ancestors -> CTree -> [Value] -> String
+printTree i ancs t errors = let (init, edges) = mkGraph t
+                            in printGraph i init edges ancs errors
 
-printTrees :: Ancestors -> [CTree] -> String
-printTrees ancs list =  "digraph CTs { \n"++(helper $ snd $ mapAccumL (\x y -> (x+1, (x,y))) 0 list)++"}\n"
+printTrees :: Ancestors -> [CTree] -> [Value]-> String
+printTrees ancs list errors =  "digraph CTs { \n"++(helper $ snd $ mapAccumL (\x y -> (x+1, (x,y))) 0 list)++"}\n"
   where helper ((i,x):xs) =
           let header = "subgraph cluster_"++(show i)
                        ++" {\n"
             --           ++ "label = \""++(show i)++"\";\n"
               footer = "}\n"
-              tr = printTree i ancs x
+              tr = printTree i ancs x errors
           in (header++tr++footer)++"\n"++(helper xs)
         helper [] = ""
 
@@ -724,21 +701,21 @@ printTrees ancs list =  "digraph CTs { \n"++(helper $ snd $ mapAccumL (\x y -> (
 printEdgeLabel :: TLabel -> String
 printEdgeLabel (True, (Send, msg)) = "!"++(msg)
 printEdgeLabel (True, (Receive, msg)) = "?"++(msg)
-printEdgeLabel (False, (_, msg)) = "?"++(msg)++"" -- qua ho cambiato [] con ?
+printEdgeLabel (False, (_, msg)) = "?"++(msg)++"" -- changed [] with ?
 
 
 
 
 inputTreeToHTLM :: InputTree -> String
-inputTreeToHTLM (Q q) = "<b><font color='black'>"++q++"</font></b>" --cambiato colore
+inputTreeToHTLM (Q q) = "<b><font color='black'>"++q++"</font></b>" --changed color
 inputTreeToHTLM (T xs) = inputForestToHTML xs
 
 inputForestToHTML :: [(Message, InputTree)] -> String
 inputForestToHTML [] = ""
 inputForestToHTML [x] = pairToHTML x
-inputForestToHTML xs = "<table color='blue' border='1'><tr><td><font color='blue'>"++(intercalate "</font></td><td>" $ L.map pairToHTML xs)++"</td></tr></table>"
---qua sopra è il rettangolo blue
+inputForestToHTML xs = "<table color='blue' border='1'><tr><td border='0'><font color='blue'>"++(intercalate "</font></td><td border='0'>" $ L.map pairToHTML xs)++"</td></tr></table>"
+
 pairToHTML :: (Message, InputTree) -> String
-pairToHTML (m, t) = "<table color='black' border='0'><tr><td><font color='blue'>"++(m)++"</font></td></tr>"
-                    ++"<tr><td>"++(inputTreeToHTLM t)++"</td></tr>"
+pairToHTML (m, t) = "<table color='blue' border='1'><tr><td border='0'><font color='blue'>"++(m)++"</font></td></tr>"
+                    ++"<tr><td border='0'>"++(inputTreeToHTLM t)++"</td></tr>"
                     ++"</table>"
