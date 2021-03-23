@@ -2,7 +2,7 @@ import tkinter as tk
 from view.WorkingArea import WorkingArea
 from view.MenuView import MenuView
 import subprocess
-
+import platform
 
 
 
@@ -35,6 +35,7 @@ class MainView:
         self.window.mainloop()
 
     def on_closing(self):
-        subprocess.run("rm -r tmp", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if platform.system() == "Windows": subprocess.run("rmdir /Q /S tmp", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        else: subprocess.run("rm -r tmp", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         self.window.destroy()
 
