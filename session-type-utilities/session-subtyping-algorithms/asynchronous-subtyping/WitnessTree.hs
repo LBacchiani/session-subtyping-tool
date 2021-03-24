@@ -153,18 +153,18 @@ genConsumeEnvi ancs t = M.fromList $ helper t
         trsucc (Node v xs) = v
         cont xs = concat $ L.map (helper . snd) xs
 
-checkingAlgorithm :: Bool ->  Bool -> Int -> LocalType -> LocalType -> IO ()
-checkingAlgorithm debug nomin bound t1 t2 =
+checkingAlgorithm :: Bool -> Bool -> Bool -> Int -> LocalType -> LocalType -> IO ()
+checkingAlgorithm debug nomin nofallback bound t1 t2 =
   let m1 = type2Machine nomin "-" t1
       m2 = type2Machine nomin "+" t2
   in do check <- fullCheck debug nomin "" m1 m2
         case check of
           Just res -> putStrLn $ "Result: " ++ show res
-          Nothing ->  do revCheck <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
-                         case revCheck of
-                              Just res -> if debug then putStrLn $ "Result: " ++ show res ++ "\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn $ "Result: " ++ show res
-                              Nothing -> if debug then putStrLn "Result: Maybe\nUnsuccessfully tried to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
-
+          Nothing ->  if not(nofallback) then do revCheck <- fullCheck debug nomin "rev_" (dualMachine m2)  (dualMachine m1)
+                                                 case revCheck of
+                                                      Just res -> if debug then putStrLn $ "Result: " ++ show res ++ "\nHad to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn $ "Result: " ++ show res
+                                                      Nothing -> if debug then putStrLn "Result: Maybe\nUnsuccessfully tried to fall back to the dual subtyping problem: corresponding simulation graph generated" else putStrLn "Result: Maybe"
+                      else putStrLn "Result: Maybe"
 
 
 fullCheck ::  Bool -> Bool -> String -> Machine -> Machine -> IO (Maybe Bool)

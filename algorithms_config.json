@@ -1,7 +1,7 @@
 [
   {
     "alg_name": "Async Subtyping",
-    "flag": "",
+    "flag": "--nofallback",
     "execution_flag": "",
     "standard_exec": "",
     "visual_flag": "--pics",

@@ -40,6 +40,7 @@ data Subtyping = Subtyping
                  , sup :: String
                  , bound :: Int
                  , nomin :: Bool
+                 , nofallback :: Bool
                  , pics :: Bool
                  }
                deriving (Data,Typeable,Show,Eq)
@@ -60,6 +61,9 @@ subargs = Subtyping
  , nomin = def
            &= explicit &= name "nomin"
            &= help "Don't minimize machines"
+ , nofallback = def
+                &= explicit &= name "nofallback"
+                &= help "No fallback to the subtyping problem in case of maybe result"
  , pics = def
            &= explicit &= name "pics"
            &= help "Print graphs (.dot and .png files)"
@@ -102,7 +106,7 @@ main = do
                 do
                   start <- getPOSIXTime
                   --
-                  checkingAlgorithm (pics pargs) False (bound pargs) subans supans
+                  checkingAlgorithm (pics pargs) False (nofallback pargs) (bound pargs) subans supans
                   --
                   end <- getPOSIXTime
                   putStrLn $ ("Time: " ++ (show $  end - start))
