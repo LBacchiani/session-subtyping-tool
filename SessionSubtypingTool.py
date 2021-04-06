@@ -3,7 +3,6 @@ from view.MainView import MainView
 from controller.Controller import Controller
 import os
 import sys
-import json
 
 def main():
     """
@@ -14,10 +13,8 @@ def main():
     if platform.system() == "Darwin": os.environ["PATH"] += os.pathsep + "/usr/local/bin"
     ################################
     """
-    f = open("algorithms_config.json")
-    config = json.load(f)
-    controller = Controller(config)
-    MainView(controller, config).create_gui()
+
+    MainView().create_gui()
 
 
 if __name__ == "__main__":

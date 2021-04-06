@@ -48,3 +48,27 @@ class DualEvent:
             if self.name in observer._observables:
                 observer._observables[self.name](self.type)
 
+class ReloadConfigEvent:
+    def __init__(self, newconfig, alg_name, autofire=True):
+        self.name = "ReloadConfigEvent"
+        self.newconfig = newconfig
+        self.alg_name = alg_name
+        if autofire: self.fire()
+
+    def fire(self):
+        for observer in Observer._observers:
+            if self.name in observer._observables:
+                observer._observables[self.name](self.newconfig, self.alg_name)
+
+
+class FormatEvent:
+    def __init__(self, new_format, autofire=True):
+        self.name = "FormatEvent"
+        self.format = new_format
+        if autofire: self.fire()
+
+    def fire(self):
+        for observer in Observer._observers:
+            if self.name in observer._observables:
+                observer._observables[self.name](self.format)
+

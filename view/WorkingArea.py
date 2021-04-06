@@ -1,7 +1,7 @@
 import platform
 import tkinter as tk
 from utility.ObserverObjects import Observer
-from threading import Thread
+from utility.Location import *
 
 class WorkingArea(Observer):
 
@@ -23,8 +23,7 @@ class WorkingArea(Observer):
 
         ###GUI Elements###
         self.window = tk.Frame(root, width=self.width/2, height=self.height, background='gray')
-        if location == "sub": self.ty = tk.Label(self.window, text="(T)ype: " + self.filename)
-        else: self.ty = tk.Label(self.window, text="(S)upertype: " + self.filename)
+        self.ty = tk.Label(self.window, text=self.location.value + ":" + self.filename)
         self.t = tk.Text(self.window, font=("Purisa",15))
         self.show = tk.Button(self.window, text="Show Image", background='gray', highlightcolor='gray')
         self.save = tk.Button(self.window, text="Save Image", background='gray', highlightcolor='gray')
@@ -36,8 +35,8 @@ class WorkingArea(Observer):
         self.pos = tk.Label(self.window, textvariable=self.varpos, background='gray',font=("Purisa",15))
         self.custommenu = None
         self.controller = controller
-        self.observe("IOEvent" + location, self.__on_io_events)
-        self.observe("DualEvent" + location, self.__on_dual_events)
+        self.observe("IOEvent" + location.value, self.__on_io_events)
+        self.observe("DualEvent" + location.value, self.__on_dual_events)
 
 
     def create_frame(self, s, menu):
@@ -62,31 +61,27 @@ class WorkingArea(Observer):
         self.show.place(x=int(self.width * .07), y=int(self.height * .9))
         self.dual.place(x=int(self.width * .21), y=int(self.height * .9))
         self.save.place(x=int(self.width * .35), y=int(self.height * .9))
-        self.show.configure(command=lambda: self.controller.show_single_type(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", self.location, self.t.get("1.0", "end-1c")))
-        self.save.configure(command=lambda: self.controller.save_type_img(("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else self.location), self.t.get("1.0", "end-1c")))
-        self.dual.configure(command=lambda: self.controller.dualize(self.t.get("1.0", "end-1c"), self.location))
+        self.show.configure(command=lambda: self.controller.show_single_type(self.location, ("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", "sub" if self.location == Location.SUBTYPE else "sup", self.t.get("1.0", "end-1c")))
+        self.save.configure(command=lambda: self.controller.save_type_img(self.location, ("tmp\\" if platform.system() == "Windows" else "tmp/"), "type_cfsm", (self.filename[:-4] if not self.filename == "" else "sub" if self.location == Location.SUBTYPE else "sup"), self.t.get("1.0", "end-1c")))
+        self.dual.configure(command=lambda: self.controller.dualize(self.t.get("1.0", "end-1c"), self.location.value))
 
         ###Scroll bar###
         self.scroll.config(command=self.t.yview)
         self.scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.scroll.place(x=int(self.width * 0.48), y=30, height=int(self.height * 0.8))
 
-    def __on_dual_events(self, text):
-        if "dual" not in self.filename: self.filename = "dual_" + self.filename if not self.filename == "" else "dual.txt"
-        self.ty.configure(text=self.ty['text'].split(" ")[0] + " " + self.filename + "*")
-        self.t.delete('1.0', tk.END)
-        self.t.insert('1.0', text)
-        self.lastty = text
-        self.custommenu.on_dual_events(self.filename[:-4], self.location)
+    def __on_dual_events(self, text): self.__update_type_inf(text, "dual.txt" if self.filename == "" else (self.filename if "dual" in self.filename else "dual_" + self.filename))
 
     def __on_io_events(self, text, filename):
-        self.ty.configure(text=self.ty['text'].split(" ")[0] + " " + filename)
+        self.__update_type_inf(text, filename, True)
+        self.__update_pos()
+
+    def __update_type_inf(self, text, filename, ioEV=False):
+        self.filename = filename
+        self.ty.configure(text=self.ty['text'].split(":")[0] + ": " + self.filename + ("*" if not ioEV else ""))
         self.t.delete('1.0', tk.END)
         self.t.insert('1.0', text)
         self.lastty = text
-        self.filename = filename
-        self.custommenu.on_io_events(self.location, filename[:-4])
-        self.__update_pos()
 
     def __on_button_press(self, event):
         self.__on_text_press()

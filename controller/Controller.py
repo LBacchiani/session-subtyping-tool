@@ -17,12 +17,15 @@ from utility.ParserErrorListener import ParserErrorListener
 from antlr4 import *
 from gen.SessionTypeLexer import SessionTypeLexer
 from gen.SessionTypeParser import SessionTypeParser
+from utility.Location import *
 
 class Controller:
 
     def __init__(self, config):
-        self.fv = FileViewer(config)
+        self.fv = FileViewer()
         self.config = config
+
+    def reload_config(self, config): self.config = config
 
     def call_algorithm(self, algconfig, t, s, options, pics, steps): Thread(target=lambda: self.__single_execution(algconfig, t, s, options, pics, steps)).start()
 
@@ -47,57 +50,59 @@ class Controller:
         except: pass
 
     def save_simulation_img(self, path, dotname, imgname):
-        out = ""
-        if not os.path.isfile(dotname + "." + self.fv.format): out = self.fv.generate(path, dotname, imgname.replace(" ", "_"))
-        if out == "": self.__save_img(path, imgname.replace(" ", "_"))
-        else: Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
+        if os.path.isfile(dotname + "." + self.fv.format): self.fv.show(path, imgname)
+        else: self.__img_op(path, dotname, imgname.replace(" ", "_"), self.__save_img)
 
-    def gen_show_img(self, path, dotname, imgname, show=False):
-        out = self.fv.generate(path, dotname, imgname)
-        if not out == "": Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
-        elif show: self.fv.show(path, imgname)
+    def gen_sim_img(self, path, dotname, imgname): self.__img_op(path, dotname, imgname, self.fv.show)
 
-    def save_type_img(self, path, dotname, imgname, t):
-        out = "Done"
-        if not os.path.isfile(dotname + ".dot"): out = self.show_single_type(path, dotname, imgname, t, False)
-        if out.__contains__("Done"): self.__save_img(path, imgname)
+    def save_type_img(self, location, path, dotname, imgname, t): self.__single_type_op(location, path, dotname, imgname, t, self.__save_img)
 
-    def show_single_type(self, path, dotname, imgname, t, show=True):
-        parsed_t = self.__check(t, None, "", "")[0]
-        out = ""
-        if not parsed_t == "":
-            out = self.__call_outer_utility(parsed_t, "viewer", "Viewer")
-            if out.__contains__("Done"): self.gen_show_img(path, dotname, imgname, show)
-            else: Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
-        return out
+    def show_single_type(self, location, path, dotname, imgname, t): self.__single_type_op(location, path, dotname, imgname, t, self.fv.show)
 
     ########################################################################
 
+    def __single_type_op(self, location, path, dotname, imgname, t, op):
+        if self.__create_dot_type_img(location, imgname, t): self.__img_op(path, dotname, imgname, op)
+
+    def __img_op(self, path, dotname, imgname, op):
+        out = self.fv.generate(path, dotname, imgname)
+        if not out == "": Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
+        else: op(path, imgname)
+
+    def __create_dot_type_img(self, location, imgname, t):
+        if location == Location.SUBTYPE: parsed, _ = self.__check(t,None)
+        else: _, parsed = self.__check(None, t)
+        if not parsed == "":
+            out = self.__call_outer_utility(parsed, "viewer", "Viewer", "t_temp.txt" if imgname == "sub" else "sup")
+            if not out.__contains__("Done"):
+                Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
+                return False
+            return True
+        else: return False
+
     def __single_execution(self, algconfig, t, s, options, pics, steps):
-        parsed_t, parsed_s = self.__check(t, s, "(T)ype: ", "(S)upertype: ")
+        parsed_t, parsed_s = self.__check(t, s)
         if not parsed_t == "" and not parsed_s == "":
-            out = self.__execute_command(algconfig, parsed_t, parsed_s, options, pics, steps)
+            out = self.__execute_command(algconfig, options, pics, steps)
             if os.path.isfile(algconfig['simulation_file'] + ".dot" if not platform.system() == "Windows" else algconfig['simulation_file'].replace("/","\\") + ".dot") and pics: AlgSuccessEvent(algconfig)
             Log("Subtyping Results", wscale=0.06, hscale=0.01, message=out)
 
     def __multiple_execution(self, t, s):
         outs = {}
-        parsed_t, parsed_s = self.__check(t, s, "(T)ype: ", "(S)upertype: ")
+        parsed_t, parsed_s = self.__check(t, s)
         if not parsed_t == "" and not parsed_s == "":
-            for algconfig in self.config: outs[algconfig['alg_name']] = self.__execute_command(algconfig, parsed_t, parsed_s, algconfig['standard_exec'], False, "")
-            self.pretty_res(outs)
+            for algconfig in self.config: outs[algconfig['alg_name']] = self.__execute_command(algconfig, algconfig['standard_exec'], False, "")
+            self.__pretty_res(outs)
 
-    def __execute_command(self, algconfig, t, s, options, pics, steps=""):
+    def __execute_command(self, algconfig, options, pics, steps=""):
         command = algconfig['exec_comm'].replace("[flags]", algconfig["visual_flag"] + " " + options if pics else options).replace("[steps]", steps)
-        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", t)
-        s_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "s_temp.txt", s)
-        command = command.replace("[t1]", t_name).replace("[t2]", s_name)
-        if platform.system() == "Windows": command = algconfig['win'] + command + " && del " + t_name + " && del " + s_name
-        else: command = algconfig['osx' if platform.system() == "Darwin" else 'linux'] + command + " && rm " + t_name + " && rm " + s_name
+        command = command.replace("[t1]", ("tmp\\" if platform.system() == "Windows" else "tmp/") + "t_temp.txt").replace("[t2]", ("tmp\\" if platform.system() == "Windows" else "tmp/") + "s_temp.txt")
+        if platform.system() == "Windows": command = algconfig['win']
+        else: command = algconfig['osx' if platform.system() == "Darwin" else 'linux'] + command
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 
-    def pretty_res(self, outs):
+    def __pretty_res(self, outs):
         res = ""
         for key in outs: res += key + "\n" + outs[key] + "\n"
         Log("Subtyping Results", wscale=0.02, hscale=0.015, message=res)
@@ -129,6 +134,27 @@ class Controller:
             subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except: os.remove(path + imgname + "." + self.fv.format)
 
+    def __check(self, t, s):
+        t_parsed, t_error_message = self.__single_check(t, "(T)ype: ", "t_temp.txt") if t is not None else ("", "")
+        s_parsed, s_error_message = self.__single_check(s, "(S)upertype: ", "s_temp.txt") if s is not None else ("", "")
+        if not t_error_message == "" or not s_error_message == "":
+            Log(title="Error Log", wscale=0.08, hscale=0.015, message=(t_error_message if not t_error_message == "" else "") + ("\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
+            return "", ""
+        return t_parsed, s_parsed if t is not None and s is not None else ((t_parsed, "") if t is not None else ("", s_parsed))
+
+    def __single_check(self, st, location, fname):
+        error_msg = ""
+        lex_error, pars_error, parsed = self.__parse(st)
+        if lex_error.error != 0: error_msg += lex_error.message
+        if pars_error.error != 0: error_msg += pars_error.message
+        if error_msg == "": error_msg = self.__semantic_check(parsed, location, fname)
+        else: error_msg = location + "you had " + str(lex_error.error) + " lexical error(s) and " + str(pars_error.error) + " syntax error(s):\n" + error_msg
+        return parsed, error_msg
+
+    def __semantic_check(self, parsed_t, location, fname):
+        out = self.__call_outer_utility(parsed_t, "parser", "Main", fname)
+        return location + self.__string_cleaner(out) + "\n" if len(self.__string_cleaner(out)) > 1 else ""
+
     def __parse(self, t):
         lexer = SessionTypeLexer(InputStream(t))
         lexer_error_listener = LexerErrorListener()
@@ -140,38 +166,14 @@ class Controller:
         tree = parser.start()
         return lexer_error_listener, parser_error_listener, tree.type
 
-    def __check(self, t, s, t_location, s_location):
-        t_lex_error, t_pars_error, parsed_t = self.__parse(t)
-        t_error_message = ""
-        s_error_message = ""
-        if t_lex_error.error != 0: t_error_message += t_lex_error.message
-        if t_pars_error.error != 0: t_error_message += t_pars_error.message
-        if t_error_message == "": t_error_message = self.__semantic_check(parsed_t, t_location)
-        else: t_error_message = t_location + "you had " + str(t_lex_error.error) + " lexical error(s) and " + str(t_pars_error.error) + " syntax error(s):\n" + t_error_message
-        if s is not None:
-            s_lex_error, s_pars_error, parsed_s = self.__parse(s)
-            if s_lex_error.error != 0: s_error_message += s_lex_error.message
-            if s_pars_error.error != 0: s_error_message += s_pars_error.message
-            if s_error_message == "": s_error_message = self.__semantic_check(parsed_s, s_location)
-            else: s_error_message = s_location + "you had " + str(s_lex_error.error) + " lexical error(s) and " + str(s_pars_error.error) + " syntax error(s):\n" + s_error_message
-        if not t_error_message == "" or not s_error_message == "":
-            Log(title="Error Log", wscale=0.08, hscale=0.015, message=(t_error_message if not t_error_message == "" else "") + ("\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
-            return "",""
-        return (parsed_t, parsed_s) if s is not None else (parsed_t, "")
-
-    def __semantic_check(self, parsed_t, location):
-        out = self.__call_outer_utility(parsed_t, "parser", "Main")
-        return location + self.__string_cleaner(out) + "\n" if len(self.__string_cleaner(out)) > 1 else ""
-
-
-    def __call_outer_utility(self, parsed_t, mainfolder, executable):
-        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", "t_temp.txt", parsed_t)
+    def __call_outer_utility(self, parsed, mainfolder, executable, fname):
+        t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", fname, parsed)
         if platform.system() == "Windows":
-            command = mainfolder + '\\win\\' + executable + " " + t_name + " && del " + t_name #ide
-            #command = mainfolder + '\\' + executable + " " + t_name + " && del " + t_name   #standalone
+            command = mainfolder + '\\win\\' + executable + " " + t_name #ide
+            #command = mainfolder + '\\' + executable + " " + t_name#standalone
         elif platform.system() == "Darwin":
-            command = command = mainfolder + '/osx/' + executable + " " + t_name + " && rm " + t_name  #ide
-            #command = mainfolder + "/" + executable + " " + t_name + " && rm " + t_name    #standalone
-        else: command = mainfolder + "/linux/" + executable + " " + t_name + " && rm " + t_name  #linux distribution
+            command = command = mainfolder + '/osx/' + executable + " " + t_name #ide
+            #command = mainfolder + "/" + executable + " " + t_name #standalone
+        else: command = mainfolder + "/linux/" + executable + " " + t_name #linux distribution
         return str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
 

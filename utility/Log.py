@@ -8,12 +8,11 @@ class Log(tk.Toplevel):
         self.width = self.winfo_screenwidth()
         self.height = self.winfo_screenheight()
         self.title(title)
-        self.t = tk.Text(self, width=int(wscale * self.width), height=int(hscale*self.height))
+        self.t = tk.Text(self, width=int(wscale * self.width), height=int(hscale*self.height), background='gray')
         self.t.insert('1.0', message)
         self.scroll = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.t.yview)
         self.scroll.pack(side='right', fill=tk.Y)
         self.t.config(state=tk.DISABLED, yscrollcommand=self.scroll.set)
-        self.t['bg'] = 'gray'
         self.t.pack()
         self.button = tk.Button(self, text="OK")
         self.button['command'] = self.destroy

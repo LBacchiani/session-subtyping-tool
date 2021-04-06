@@ -4,7 +4,11 @@ import tkinter as tk
 from utility.Log import Log
 from utility.ObserverObjects import Observer
 from tkinter import simpledialog
-import subprocess
+from utility.Location import *
+
+
+from view.AlgorithmConfiguration import AlgorithmConfiguration
+
 
 class MenuView(Observer):
 
@@ -19,6 +23,8 @@ class MenuView(Observer):
         self.fair_result = tk.Menu(self.simulation_res)
         self.unfair_result = tk.Menu(self.simulation_res)
         self.options = tk.Menu(self.settings)
+        self.alg_conf_menu = tk.Menu(self.settings)
+        self.edit_conf_menu = tk.Menu(self.alg_conf_menu)
         self.t = None
         self.s = None
 
@@ -29,9 +35,15 @@ class MenuView(Observer):
         self.config = config
         self.misc_options = {}
         self.exec_options = {}
+        self.maxwidth = window.winfo_screenwidth()
+        self.maxheight = window.winfo_screenheight()
         self.steps = 0
         self.pic = tk.BooleanVar()
         self.observe("SuccessEvent", self.__enable)
+        self.observe("IOEvent" + Location.SUBTYPE.value, self.__on_io_events_sub)
+        self.observe("IOEvent" + Location.SUPERTYPE.value, self.__on_io_events_sup)
+        self.observe("DualEvent" + Location.SUBTYPE.value, self.__on_dual_events_sub)
+        self.observe("DualEvent" + Location.SUPERTYPE.value, self.__on_dual_events_sup)
 
     def bind_type(self, session_type):
         if self.t is None: self.t = session_type
@@ -44,14 +56,16 @@ class MenuView(Observer):
         self.menu.add_cascade(label="Settings", menu=self.settings)
 
         ###File Menu configuration####
-        self.filemenu.add_command(label="Open (T)ype", command=lambda: controller.open_type("sub"))
-        self.filemenu.add_command(label="Open (S)upertype", command=lambda: controller.open_type("sup"))
-        self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type("sub", self.subname, self.t.get("1.0", "end-1c")))
-        self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type("sup", self.supname, self.s.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Open (T)ype", command=lambda: controller.open_type(Location.SUBTYPE.value))
+        self.filemenu.add_command(label="Open (S)upertype", command=lambda: controller.open_type(Location.SUPERTYPE.value))
+        self.filemenu.add_command(label="Save (T)ype", command=lambda: controller.save_type(Location.SUBTYPE.value, self.subname, self.t.get("1.0", "end-1c")))
+        self.filemenu.add_command(label="Save (S)uperype", command=lambda: controller.save_type(Location.SUPERTYPE.value, self.supname, self.s.get("1.0", "end-1c")))
         self.filemenu.add_command(label="Dual Subtyping", command=lambda: self.__dualize(controller, self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
 
         ###Algorithms####
-        for algconfig in self.config: self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
+        for algconfig in self.config:
+            self.algorithms.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: self.__call_function(controller, value))
+            self.edit_conf_menu.add_command(label=algconfig['alg_name'], command=lambda value=algconfig: AlgorithmConfiguration(self.maxwidth, self.maxheight,value))
         self.algorithms.add_command(label="Run All", command=lambda: controller.run_all(self.t.get("1.0", "end-1c"), self.s.get("1.0", "end-1c")))
 
         ###Simulation result configuration###
@@ -78,31 +92,32 @@ class MenuView(Observer):
                     algconfig['alg_name'] in self.exec_options.keys() or "[steps]" in algconfig['exec_comm']:
                 self.options.add_cascade(label=algconfig["alg_name"], menu=options_menu)
         self.settings.add_checkbutton(label="Generate Graphs", variable=self.pic)
+        self.settings.add_cascade(label="Algorithm Configurations", menu=self.alg_conf_menu)
+        self.alg_conf_menu.add_command(label="Add algorithm", command=lambda: AlgorithmConfiguration(self.maxwidth, self.maxheight))
+        self.alg_conf_menu.add_cascade(label="Edit configuration", menu=self.edit_conf_menu)
         self.pic.set(True)
 
-
-    def on_io_events(self, location, filename):
-        if location == "sub": self.subname = filename
-        else: self.supname = filename
+    def __on_io_events_sub(self, filename):
+        self.subname = filename
         self.menu.entryconfig("Simulation Result", state="disabled")
 
-    def on_dual_events(self, filename, location):
-        if location == "sub": self.subname = filename
-        else: self.supname = filename
+    def __on_io_events_sup(self, filename):
+        self.supname = filename
+        self.menu.entryconfig("Simulation Result", state="disabled")
 
-    ####################################################
+    def __on_dual_events_sub(self, filename): self.subname = filename
+
+    def __on_dual_events_sup(self, filename): self.supname = filename
 
     def __dualize(self, controller, t, s):
-        controller.dualize(t, "sup")
-        controller.dualize(s, "sub")
-
+        controller.dualize(t, Location.SUPERTYPE.value)
+        controller.dualize(s, Location.SUBTYPE.value)
 
     def __set_steps(self):
         user_input = simpledialog.askstring("Algorithms step setting", "Insert steps number of the next simulation")
         if user_input is not None and user_input.isnumeric():
             self.steps = int(user_input)
-            if self.steps <= 0: Log("Subtyping Results", wscale=0.025, hscale=0.01, message="Please insert a number > 0")
-
+            if self.steps <= 0: Log("Warning", wscale=0.025, hscale=0.01, message="Please insert a number > 0")
 
     def __save(self, controller):
         for algconfig in self.config:
@@ -115,7 +130,7 @@ class MenuView(Observer):
         for algconfig in self.config:
             if algconfig['alg_name'] == self.lastalg:
                 split = algconfig['simulation_file'].split("/")
-                controller.gen_show_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], split[1], True)
+                controller.gen_sim_img(split[0] + ("\\" if platform.system() == "Windows" else "/"), split[1], split[1])
                 return
 
     def __enable(self, algconfig):
@@ -159,6 +174,7 @@ class MenuView(Observer):
     def __unset_others(self, algname, flagname):
         for state in self.exec_options[algname]:
             if state != flagname: self.exec_options[algname][state].set(False)
+
 
 
 
