@@ -70,7 +70,7 @@ class Controller:
         else: op(path, imgname)
 
     def __create_dot_type_img(self, location, imgname, t):
-        if location == Location.SUBTYPE: parsed, _ = self.__check(t,None)
+        if location == Location.SUBTYPE: parsed, _ = self.__check(t, None)
         else: _, parsed = self.__check(None, t)
         if not parsed == "":
             out = self.__call_outer_utility(parsed, "viewer", "Viewer", "t_temp.txt" if imgname == "sub" else "sup")
@@ -140,7 +140,9 @@ class Controller:
         if not t_error_message == "" or not s_error_message == "":
             Log(title="Error Log", wscale=0.08, hscale=0.015, message=(t_error_message if not t_error_message == "" else "") + ("\n\n" if not t_error_message  == "" and not s_error_message == "" else "") + (s_error_message if not s_error_message == "" else ""))
             return "", ""
-        return t_parsed, s_parsed if t is not None and s is not None else ((t_parsed, "") if t is not None else ("", s_parsed))
+        if t is not None and s is not None: return t_parsed, s_parsed
+        elif t is not None: return t_parsed, ""
+        else: return "", s_parsed
 
     def __single_check(self, st, location, fname):
         error_msg = ""
