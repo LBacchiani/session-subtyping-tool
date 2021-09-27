@@ -62,18 +62,22 @@ class Controller:
     ########################################################################
 
     def __single_type_op(self, location, path, dotname, imgname, t, op):
-        if self.__create_dot_type_img(location, imgname, t): self.__img_op(path, dotname, imgname, op)
+        if self.__create_dot_type_img(location, t): self.__img_op(path, dotname, imgname, op)
 
     def __img_op(self, path, dotname, imgname, op):
         out = self.fv.generate(path, dotname, imgname)
         if not out == "": Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
         else: op(path, imgname)
 
-    def __create_dot_type_img(self, location, imgname, t):
-        if location == Location.SUBTYPE: parsed, _ = self.__check(t, None)
-        else: _, parsed = self.__check(None, t)
+    def __create_dot_type_img(self, location, t):
+        if location == Location.SUBTYPE:
+            parsed, _ = self.__check(t, None)
+            fname = "t_temp.txt"
+        else:
+            _, parsed = self.__check(None, t)
+            fname = "s_temp.txt"
         if not parsed == "":
-            out = self.__call_outer_utility(parsed, "viewer", "Viewer", "t_temp.txt" if imgname == "sub" else "sup")
+            out = self.__call_outer_utility(parsed, "viewer", "Viewer", fname)
             if not out.__contains__("Done"):
                 Log("Error Log", wscale=0.08, hscale=0.015, message=self.__string_cleaner(out))
                 return False
