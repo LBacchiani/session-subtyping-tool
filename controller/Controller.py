@@ -174,8 +174,7 @@ class Controller:
 
     def __call_outer_utility(self, parsed, mainfolder, executable, fname):
         t_name = self.__crete_tmp_type("tmp\\" if platform.system() == "Windows" else "tmp/", fname, parsed)
-        user_os = "\\win\\" if platform.system() == "Windows" else "/osx/" if platform.system() == "Darwin" else "/linux/"
-        #command = mainfolder + user_os + executable + " " + t_name #ide
-        command = mainfolder + '\\' + executable + " " + t_name #standalone windows
-        #command = mainfolder + '/' + executable + " " + t_name #standalone others
+        user_os = "\\win\\" if platform.system() == "Windows" else "/osx/" if platform.system() == "Darwin" else "/linux/"  #ide
+        #user_os = "\\" if platform.system() == "Windows" else "/" #standalone
+        command = mainfolder + user_os + executable + " " + t_name
         return str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
