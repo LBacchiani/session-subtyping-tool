@@ -101,8 +101,8 @@ class Controller:
     def __execute_command(self, algconfig, options, pics, steps=""):
         command = algconfig['exec_comm'].replace("[flags]", algconfig["visual_flag"] + " " + options if pics else options).replace("[steps]", steps)
         command = command.replace("[t1]", ("tmp\\" if platform.system() == "Windows" else "tmp/") + "t_temp.txt").replace("[t2]", ("tmp\\" if platform.system() == "Windows" else "tmp/") + "s_temp.txt")
-        if platform.system() == "Windows": command = algconfig['win']
-        else: command = algconfig['osx' if platform.system() == "Darwin" else 'linux'] + command
+        user_os = "win" if platform.system() == "Windows" else "osx" if platform.system() == "Darwin" else "linux"
+        command = algconfig[user_os] + command
         out = str(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout)
         return self.__string_cleaner(out)
 

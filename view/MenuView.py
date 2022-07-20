@@ -74,10 +74,10 @@ class MenuView(Observer):
         self.menu.entryconfig("Simulation Result", state="disabled")
 
         ###Pics format###
-        for format in ["png", "pdf", "jpeg", "svg"]: self.pics_format.add_radiobutton(label="."+format, command=lambda f=format: self.__set_format(f, controller))
+        for format in ["svg", "pdf", "jpeg", "png"]: self.pics_format.add_radiobutton(label="."+format, command=lambda f=format: self.__set_format(f, controller))
 
-        if platform.system() == "Darwin": self.pics_format.invoke(0)  # .png standard format
-        else: self.pics_format.invoke(1)  # .png standard format
+        if platform.system() == "Darwin": self.pics_format.invoke(0)  # .svg standard format
+        else: self.pics_format.invoke(1)  # .svg standard format
 
 
         ###Settings configuration###
