@@ -12,6 +12,8 @@ You will need Graphviz (dot) installed on your machine with the dot command path
 - The `dot` command has to be in your PATH.
 - Your Graphviz installation should support different formats: `png, jpeg, pdf, svg`. You can check this executing `dot -v`. If you find out that your installation does not support the aforementioned formats, execute `dot -c`
 
+Make sure that the downloaded version of Graphviz is actually under execution: `dot -v` must print the correct version when executed (put the Graphviz path at the beginning of the system PATH variable)
+
 ## Source Code Usage:
 
 ### Requirements:
