@@ -49,7 +49,7 @@ main = do
           then putStrLn "Error in local type (not well-formed)."
           else
             do
-             let m1 = type2Machine False "-" ans
+             let m1 = type2Machine True "-" ans
              machine2file m1 "type"
              putStrLn "Done"
   return ()

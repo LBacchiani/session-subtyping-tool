@@ -56,14 +56,14 @@ checkingAlgorithm bound dual debug nomin t1 t2 =
                 b = (not $ isControllable m2) || b'
             in
             do case prune m1 ancs t of
-                 Nothing -> do putStrLn ("Result: " ++ (if not(b) && errors == [] then "Maybe" else show b) )
+                 Nothing -> do putStrLn ("Result: " ++ (if not(b) && errors == [] then "Maybe" else show b))
                                when debug $
                                  do
                                     printDebugInfo m1 m2 t [] ancs errors
                                     when(not $ isControllable m2) $ putStrLn "Uncontrollable supertype: empty simulation graph generated"
 
                  Just t' -> do let ts = splitTree ancs t'
-                               putStrLn ("Result: " ++ (if not(b) && errors == [] then "Maybe" else show $ b && (L.all (goodTree bound m1 ancs) ts)))
+                               putStrLn ("Result: " ++ (if (not(b) && errors == []) || (b && not((L.all (goodTree bound m1 ancs) ts))) then "Maybe" else show b))
                                when debug $
                                  do
                                     printDebugInfo m1 m2 t ts ancs errors
