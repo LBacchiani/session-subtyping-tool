@@ -200,7 +200,7 @@ holesOfMachine ca m1 = (kholes ca m1, jholes ca m1)
 depthCtxtA :: CtxtA -> Int
 depthCtxtA (JHole _) = 1
 depthCtxtA (KHole _) = 1
-depthCtxtA (CtxtA xs) = maximum $ L.map (depthCtxtA . snd) xs
+depthCtxtA (CtxtA xs) = 1 + (maximum $ L.map (depthCtxtA . snd) xs)
 
 compareCtxtA :: CtxtA -> CtxtA -> Ordering
 compareCtxtA c1 c2 =
